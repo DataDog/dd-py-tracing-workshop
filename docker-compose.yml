@@ -12,7 +12,7 @@ services:
   redis:
       image: "redis:alpine"
   agent:
-      image: "datadog/docker-dd-agent"
+      image: "datadog/docker-dd-agent:latest"
       environment:
           - API_KEY=your_api_key_here
           - DD_APM_ENABLED=true

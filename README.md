@@ -11,7 +11,7 @@
 
 
 ## Get started
-Set your Datadog API key in the docker-compose.yml file
+**Set your Datadog API key in the docker-compose.yml file**
 
 Now start up the sample app
 ```
