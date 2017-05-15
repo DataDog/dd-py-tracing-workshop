@@ -4,32 +4,36 @@
 ## Prerequisites
 - `docker`
 - `docker-compose`
+- `python`
 
 
 ## Get started
 Start up the sample app along with the trace-agent
 ```
 $ docker-compose up
+
+# bootstrap our database
+$ python bootstrap.py
 ```
 
 ## Step 1
 
 We have an app that lets us find good pairings of beer and donuts.
 Let's look at all the beers we have available
-`curl -XGET localhost:8080/beers`
+`curl -XGET localhost:5000/beers`
 
 And now let's look at all the flavors of donuts we have available
-`curl -XGET localhost:8080/donuts`
+`curl -XGET localhost:5000/donuts`
 
 We can grab a beer by name
-`curl -XGET localhost:8080/beer/ipa`
+`curl -XGET localhost:5000/beer/ipa`
 
 and a donut by name
-`curl -XGET localhost:8080/donut/jelly`
+`curl -XGET localhost:5000/donut/jelly`
 
 Things feel pretty speedy. But happens when we try to find a donut that pairs well with our favorite beer?
 
-`curl -XGET localhost:8080/pair/beer?name=ipa`
+`curl -XGET localhost:5000/pair/beer?name=ipa`
 
 It feels slow !! How much slower? Good q
 
