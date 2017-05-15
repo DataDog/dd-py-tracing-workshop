@@ -6,9 +6,16 @@ services:
        - "5000:5000"
       volumes:
        - .:/code
+      depends_on:
+       - agent
+       - redis
   redis:
       image: "redis:alpine"
   agent:
       image: "datadog/docker-dd-agent"
       environment:
           - API_KEY=your_api_key_here
+          - DD_APM_ENABLED=true
+          - TAGS=env:pycon
+      ports:
+       - "8126:8126"

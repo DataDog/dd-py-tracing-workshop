@@ -6,9 +6,14 @@
 - `docker-compose`
 - `python`
 
+[Docker install for Mac](https://www.docker.com/docker-mac)
+[Docker install for Windows](TODO)
+
 
 ## Get started
-Start up the sample app along with the trace-agent
+Set your Datadog API key in the docker-compose.yml file
+
+Now start up the sample app
 ```
 $ docker-compose up
 

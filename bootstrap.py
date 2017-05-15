@@ -3,15 +3,15 @@ if __name__ == '__main__':
     db.create_all()
 
     # create beers
-    db.session.add(Beer("IPA"))
-    db.session.add(Beer("Pilsner"))
-    db.session.add(Beer("Lager"))
-    db.session.add(Beer("Stout"))
+    db.session.add(Beer("ipa"))
+    db.session.add(Beer("pilsner"))
+    db.session.add(Beer("lager"))
+    db.session.add(Beer("stout"))
     db.session.commit()
 
     # create donuts
-    db.session.add(Donut("Jelly"))
-    db.session.add(Donut("Glazed"))
-    db.session.add(Donut("Chocolate"))
-    db.session.add(Donut("Bavarian"))
+    db.session.add(Donut("jelly"))
+    db.session.add(Donut("glazed"))
+    db.session.add(Donut("chocolate"))
+    db.session.add(Donut("bavarian"))
     db.session.commit()

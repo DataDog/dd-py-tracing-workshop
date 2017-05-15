@@ -1,5 +1,11 @@
 from __future__ import print_function
 
+
+from ddtrace import patch_all, tracer
+patch_all(flask=True, sqlalchemy=True)
+tracer.configure(hostname="agent")
+
+
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import  SQLAlchemy
 
