@@ -3,6 +3,7 @@
 
 ## Prerequisites
 - `docker`
+- `docker-compose`
 
 
 ## Get started

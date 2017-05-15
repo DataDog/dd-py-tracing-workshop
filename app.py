@@ -38,7 +38,7 @@ def slower_route():
     return "200 OK"
 
 @app.route('/pair/beer')
-def slower_route():
+def pair():
     # Get beer name from params
     beers = Beer.query(name=name)
     donuts = Donut.query.all()
@@ -47,4 +47,4 @@ def slower_route():
     return "200 OK"
 
 if __name__ == '__main__':
-    app.run()
+    app.run(host="0.0.0.0", debug=True)

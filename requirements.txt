@@ -1,0 +1,4 @@
+flask
+redis
+flask_sqlalchemy
+ddtrace
