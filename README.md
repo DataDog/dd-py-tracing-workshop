@@ -16,9 +16,6 @@ Set your Datadog API key in the docker-compose.yml file
 Now start up the sample app
 ```
 $ docker-compose up
-
-# bootstrap our database
-$ python bootstrap.py
 ```
 
 ## Step 1
