@@ -141,4 +141,22 @@ it makes sense to cache its donut pairing so other users will benefit. Let's giv
 
 How do our traces look now?
 
-## Step 9 - Nearly Done!
+## Step 9 - Distributed!
+Most of the hardest problems we have to solve in our systems won't involve just one application. Let's imagine a world where our index of donut scores was maintained by an entirely different service.
+
+Change the `best_match` function to be distributed
+```
+def best_match_distributed(beer):
+    match = requests.get("score_service:5000/match", params={'beer': beer})
+    return match
+```
+
+We gain something here - decoupling the scoring service allows us more granular releases and dev cycles.
+But we also lose something - visibility!
+
+How do we bring it back?
+
+## Step 10 - Context propagation
+
+
+
