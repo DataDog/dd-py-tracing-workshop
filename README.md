@@ -49,26 +49,42 @@ def timing_decorator(func):
     def wrapped(*args, **kwargs):
         start = time.time()
         try:
-            ret = func(*args, **kwargs
+            ret = func(*args, **kwargs)
         finally:
             end = time.time()
-        log.info("function %s took %.2f seconds", func.__name__, start-end)
+        print("function %s took %.2f seconds" % (func.__name__, end-start))
         return ret
-    return wrapped
+    return wrapped    
 ```
 
 With a context manager:
 ```
 class TimingContextManager(object):
+
+    def __init__(self, name):
+        self.name = name
+        
     def __enter__(self):
-        pass
+        self.start = time.time()
+        
     def __exit__(self):
-        pass
+        end = time.time()
+        print("operation %s took %.2f seconds" % (self.name, end-self.start))
 ```
 
-Let's choose our favorite one of these and wire these into the app.
-Every time a route gets hit, let's have it dump helpful debug information to the log.
-
+Let's wire these into the app. 
+```
+@timing_decorator
+@app.route('/pair/beer/<name>')
+def pair_route(name):
+    with TimingContextManager("beer.query.one"):
+        beer = Beer.query.filter_by(name=name)
+    with TimingContextManager("donut.query.all"):
+        donuts = Donut.query.all()
+   
+    return jsonify(match=best_match(beer, donuts))
+```
+Now, when our slow route gets hit, it dumps some helpful debug information to the log.
 This seems like useful information to have enabled by default. How do we do that?
 
 ## Step 3 - Middleware
