@@ -44,7 +44,7 @@ It feels slow !! How much slower? Good q
 Anyone ever had to time a python function before? There are several ways to do it
 
 With a decorator:
-```
+```python
 def timing_decorator(func):
     def wrapped(*args, **kwargs):
         start = time.time()
@@ -58,7 +58,7 @@ def timing_decorator(func):
 ```
 
 With a context manager:
-```
+```python
 class TimingContextManager(object):
 
     def __init__(self, name):
@@ -73,7 +73,7 @@ class TimingContextManager(object):
 ```
 
 Let's wire these into the app. 
-```
+```python
 @timing_decorator
 @app.route('/pair/beer/<name>')
 def pair_route(name):
