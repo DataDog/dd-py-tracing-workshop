@@ -44,14 +44,47 @@ It feels slow !! How much slower? Good q
 Anyone ever had to time a python function before? There are several ways to do it
 
 With a decorator:
-TODO Code sample
+```python
+def timing_decorator(func):
+    def wrapped(*args, **kwargs):
+        start = time.time()
+        try:
+            ret = func(*args, **kwargs)
+        finally:
+            end = time.time()
+        print("function %s took %.2f seconds" % (func.__name__, end-start))
+        return ret
+    return wrapped    
+```
 
 With a context manager:
-TODO Code sample
+```python
+class TimingContextManager(object):
 
-Let's choose our favorite one of these and wire these into the app.
-Every time a route gets hit, let's have it dump helpful debug information to the log.
+    def __init__(self, name):
+        self.name = name
+        
+    def __enter__(self):
+        self.start = time.time()
+        
+    def __exit__(self):
+        end = time.time()
+        print("operation %s took %.2f seconds" % (self.name, end-self.start))
+```
 
+Let's wire these into the app. 
+```python
+@timing_decorator
+@app.route('/pair/beer/<name>')
+def pair_route(name):
+    with TimingContextManager("beer.query.one"):
+        beer = Beer.query.filter_by(name=name)
+    with TimingContextManager("donut.query.all"):
+        donuts = Donut.query.all()
+   
+    return jsonify(match=best_match(beer, donuts))
+```
+Now, when our slow route gets hit, it dumps some helpful debug information to the log.
 This seems like useful information to have enabled by default. How do we do that?
 
 ## Step 3 - Middleware
@@ -108,4 +141,22 @@ it makes sense to cache its donut pairing so other users will benefit. Let's giv
 
 How do our traces look now?
 
-## Step 9 - Nearly Done!
+## Step 9 - Distributed!
+Most of the hardest problems we have to solve in our systems won't involve just one application. Let's imagine a world where our index of donut scores was maintained by an entirely different service.
+
+Change the `best_match` function to be distributed
+```
+def best_match_distributed(beer):
+    match = requests.get("score_service:5000/match", params={'beer': beer})
+    return match
+```
+
+We gain something here - decoupling the scoring service allows us more granular releases and dev cycles.
+But we also lose something - visibility!
+
+How do we bring it back?
+
+## Step 10 - Context propagation
+
+
+
