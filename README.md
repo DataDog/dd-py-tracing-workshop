@@ -44,10 +44,27 @@ It feels slow !! How much slower? Good q
 Anyone ever had to time a python function before? There are several ways to do it
 
 With a decorator:
-TODO Code sample
+```
+def timing_decorator(func):
+    def wrapped(*args, **kwargs):
+        start = time.time()
+        try:
+            ret = func(*args, **kwargs
+        finally:
+            end = time.time()
+        log.info("function %s took %.2f seconds", func.__name__, start-end)
+        return ret
+    return wrapped
+```
 
 With a context manager:
-TODO Code sample
+```
+class TimingContextManager(object):
+    def __enter__(self):
+        pass
+    def __exit__(self):
+        pass
+```
 
 Let's choose our favorite one of these and wire these into the app.
 Every time a route gets hit, let's have it dump helpful debug information to the log.
