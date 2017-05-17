@@ -194,7 +194,7 @@ req: 27c2fd1a-98db-4767-bb93-b7582cf9c776, operation beer.query took 0.023 secon
 req: 27c2fd1a-98db-4767-bb93-b7582cf9c776, operation donuts.query took 0.006 seconds
 req: 27c2fd1a-98db-4767-bb93-b7582cf9c776, operation match took 0.013 seconds
 req: 27c2fd1a-98db-4767-bb93-b7582cf9c776, function pair took 0.047 seconds
-``
+```
 
 
 ## Step 4 - A Step back
