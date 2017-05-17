@@ -136,8 +136,8 @@ def best_match(beer):
     best_match = None
 
     for candidate in candidates:
-        score = requests.get("http://taster:5000/taste", params={"beer": beer, "donut": candidate}) 
-        
+        resp = requests.get("http://taster:5001/taste", params={"beer": beer, "donut": candidate}) 
+        score = resp.json()["score"]
         if score > max_score:
             max_score = score
             best_match = candidate

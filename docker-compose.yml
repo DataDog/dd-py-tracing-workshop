@@ -9,6 +9,17 @@ services:
       depends_on:
        - agent
        - redis
+  taster:
+      build:
+        context: .
+        dockerfile: Dockerfile_taster
+      ports:
+       - "5001:5001"
+      volumes:
+       - .:/code
+      depends_on:
+       - agent
+       - redis
   redis:
       image: "redis:alpine"
   agent:
