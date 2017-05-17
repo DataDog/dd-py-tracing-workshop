@@ -13,7 +13,7 @@ Here's an app that does a simple thing. It tells you what donut to pair with you
 
 - It speaks HTTP
 - To do its job, it must talk to datastores and external services.
-- It _fails_ 
+- It _fails_
 
 ## Get started
 **Set your Datadog API key in the docker-compose.yml file**
@@ -78,7 +78,7 @@ def timing_decorator(func):
             end = time.time()
         print("function %s took %.2f seconds" % (func.__name__, end-start))
         return ret
-    return wrapped    
+    return wrapped
 ```
 
 With a context manager:
@@ -87,16 +87,16 @@ class TimingContextManager(object):
 
     def __init__(self, name):
         self.name = name
-        
+
     def __enter__(self):
         self.start = time.time()
-        
+
     def __exit__(self, exc_type, exc_value, traceback):
         end = time.time()
         log.info("operation %s took %.2f seconds", self.name, end-self.:start)
 ```
 
-This code lives for you in `timing.py` and logs to `timing.log`. Let's wire these into the app. 
+This code lives for you in `timing.py` and logs to `timing.log`. Let's wire these into the app.
 ```python
 from timing import timing_decorator, TimingContextManager
 ...
@@ -104,14 +104,14 @@ from timing import timing_decorator, TimingContextManager
 @app.route('/pair/beer')
 @timing_decorator
 def pair():
-    ... 
+    ...
 ```
 Now, when our slow route gets hit, it dumps some helpful debug information to the log.
 
 ## Step 3 - Drill Down into subfunctions
 
 The information about our bad route is still rather one-dimensional. The pair route does some fairly
-complex things and i'm still not entirely sure _where_ it spends its time. 
+complex things and i'm still not entirely sure _where_ it spends its time.
 
 Let me use the timing context manager to drill down further.
 ```
@@ -119,14 +119,14 @@ Let me use the timing context manager to drill down further.
 @timing_decorator
 def pair():
     name = request.args.get('name')
-    
+
     with TimingContextManager("beer.query"):
         beer = Beer.query.filter_by(name=name).first()
     with TimingContextManager("donuts.query"):
         donuts = Donut.query.all()
     with TimingContextManager("match"):
         match = best_match(beer)
-    
+
     return jsonify(match=match)
 ```
 
@@ -202,21 +202,21 @@ Let's think about what we've done so far. We've taken an app that was not partic
 and made it incrementally more so.
 
 Our app now generates events
-   - that are request-scoped. 
+   - that are request-scoped.
    - and suggest a causal relationship
 
 Remember our glossary - we're well on our way to having real traces!
 
 One thing to note, this didn't come for free:
  - instrumentation is a non-zero overhead
- - instrumentation logic can leak into business logic in unsavory ways 
+ - instrumentation logic can leak into business logic in unsavory ways
 
 What a good tracing client does for you is minimize the impact of both of these, while still emitting
 rich, structured information.
 
 
 ## Step 5 - Datadog's python tracing client
-Datadog's tracing client integrates with several commonly used python libraries. 
+Datadog's tracing client integrates with several commonly used python libraries.
 
 Instrumentation can be explicit or implicit, and uses any library standards for telemetry that exist.
 For most web frameworks this means Middleware. Let's add trace middleware to our flask integration
@@ -230,32 +230,64 @@ from ddtrace.contrib.flask import TraceMiddleware
 app = Flask(__name__)
 traced_app = TraceMiddleware(app, tracer, service="matchmaker")
 ```
+The middleware is doing something very similar to the code you just wrote. It is:
+- Timing requests
+- Collecting request-scoped metadata
+- Pinning some information to the global request context to allow causal relationships to be registered
 
 If we hit our app a few more times, we can see that datadog has begun to display some information for us.
-Let's walk through what you're seeing - 
+Let's walk through what you're seeing -
 
+Now that Datadog is doing the work for us at the middleware layer, we can drop our `@timing_decorator`
 
-## Step 6 - Deeper traces
-We're interested in the databases and services our application talks to . Let's wire up tracing for
-these as well
+## Step 6 - Services, Names, and Resources
+Datadog's tracing client configures your application to emit _Spans_ .
+A span is a chunk of computation time, an operation that you care about that is part of serving a request
 
-
-
-## Step 7 - ddtrace patch sqlalchemy
-Our spans look a bit sparse without real info about DB calls, let's add in some custom wrappers around the db
-
+Let's look at what a span consists. In the previous step, you turned debug_logging on, which instructs
+the tracer do dump spans to the console as they're emitted. (Don't do this in production!)
 ```
-with tracer.trace("db.query", service="db") as span:
-    span.Resource = "Beer.query.all"
-    Beer.query.all()
+TODO Span dump
 ```
 
-Seem onerous to do this everywhere - luckily ddtrace will patch all calls for you
+Looks cool but how useful is that by itself. Let's add some context around it.
+
+Our app involves multiple services.
+You'll notice our service list is a little bare. That's because right now, Datadog only knows about the
+one high-level flask service. Let's do some work so that it knows about the other services and datastores we communicate with.
+
+Datadog's tracing client provides a version of the TimingContextManager that produces well-formatted _spans_.
+It also accepts as parameters the service, name and resource identifiers we just talked about.
+
+Let's do a subtle rewrite of our context managers
+```
+@app.route('/pair/beer')
+def pair():
+    name = request.args.get('name')
+
+    with tracer.trace("beer.query", service="db"):
+        beer = Beer.query.filter_by(name=name).first()
+    with tracer.trace("donuts.query", service="db"):
+        donuts = Donut.query.all()
+
+    # leaving the service back implies that we inherit the service from our parent
+    # i.e. the active span at the time `tracer.trace` is invoked
+    with tracer.trace("donuts.query"):
+        match = best_match(beer)
+
+    return jsonify(match=match)
+```
+
+
+## Step 7 - Tracing the ORM
+A good tracing client will unpack some of the layers of indirection in ORMs , and give you a
+true view of the sql being executed. This lets us marry the the nice APIs of ORMS with visibility
+into what exactly is being executed and how performant it is
+
+Let's see what Datadog's `sqlalchemy` integration can do
 ```from ddtrace import monkey; monkey.patch(sqlalchemy=True)```
 
-## Step 8 - Autopatch
-In fact we have tracing for a ton of useful libraries right out of the box. Let's enable these via autopatching
-
+## Step 8 - Investigate
 As datadog shows us we seem to be doing a bucket load of SQL queries for finding
 good beer-donut pairings!
 
