@@ -1,8 +1,6 @@
 from __future__ import print_function
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, g
 from flask_sqlalchemy import  SQLAlchemy
-
-from timing import timing_decorator, TimingContextManager
 
 import random
 import requests
@@ -89,14 +87,12 @@ def donut(name):
 # And some complex ones 
 
 @app.route('/pair/beer')
-@timing_decorator
 def pair():
-    # Get beer name from params
     name = request.args.get('name')
     beer = Beer.query.filter_by(name=name).first()
     donuts = Donut.query.all()
-
     match = best_match(beer)
+    
     return jsonify(match=match)
 
 
@@ -153,8 +149,4 @@ def best_match(beer):
     return candidate
 
 if __name__ == '__main__':
-    db.create_all()
-    db.session.add(Beer("ipa", 7))
-    db.session.commit()
-
     app.run(host="0.0.0.0", debug=True)
