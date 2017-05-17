@@ -48,10 +48,10 @@ And the donuts we have available
 `curl -XGET localhost:5000/donuts`
 
 We can grab a beer by name
-`curl -XGET localhost:5000/beer/ipa`
+`curl -XGET localhost:5000/beers/ipa`
 
 and a donut by name
-`curl -XGET localhost:5000/donut/jelly`
+`curl -XGET localhost:5000/donuts/jelly`
 
 So far so good.
 
@@ -139,7 +139,7 @@ operation match took 0.011 seconds
 function pair took 0.041 seconds
 ```
 
-But after several requests, this log becomes increasingly harder to scan! Let's add an identifier
+But after several requests, this log becomes increasingly hard to scan! Let's add an identifier
 to make sure we can trace the path of a request in its entirety.
 
 
@@ -205,7 +205,7 @@ Our app now generates events
    - that are request-scoped. 
    - and suggest a causal relationship
 
-Remember our glossary - we're well on our way to having traces!
+Remember our glossary - we're well on our way to having real traces!
 
 But first some housekeeping
 
@@ -213,18 +213,18 @@ But first some housekeeping
 ## Step 5 - Litter-free instrumentation
 
 Scattering our context managers and routes across the app is cumbersome. How do we put this logic 
-out-of-sight and out-of-mind
+out-of-sight and out-of-mind?
 
 Python web frameworks all support the concept of middleware. Arbitrary code that
 is run at the beginning and end of every HTTP request loop. This is an ideal place
-to plugin telemetry
+to plugin telemetry.
 
 ## Step 6 - ddtrace patch Flask
 We've done the hard work of adding Middleware for you let's look at what it does.
 And here's how we can patch it
 ```from ddtrace import monkey; monkey.patch(flask=True)```
 
-Now let's restart our app, and pull up datadog. Ping your app a few times. And there you go.
+Now ping our app  datadog. Ping your app a few times. And there you go.
 
 ## Step 7 - ddtrace patch sqlalchemy
 Our spans look a bit sparse without real info about DB calls, let's add in some custom wrappers around the db
