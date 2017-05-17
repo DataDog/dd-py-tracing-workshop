@@ -23,10 +23,14 @@ Now start up the sample app
 $ docker-compose up
 ```
 
+Now you should have running:
+- A Flask app, accepting HTTP requests
+- Redis, the backing datastore
+- Datadog agent, a process that listens for, samples and aggregates traces
+
 ## Step 1
 
-We have an app that lets us find good pairings of beer and donuts.
-Let's look at all the beers we have available
+Let's poke through the app and see how it works
 `curl -XGET localhost:5000/beers`
 
 And now let's look at all the flavors of donuts we have available
@@ -44,7 +48,7 @@ Things feel pretty speedy. But happens when we try to find a donut that pairs we
 
 It feels slow !! How much slower? Good q
 
-## Step 2 - add timing to individual routes
+## Step 2 - Timing a Route
 
 Anyone ever had to time a python function before? There are several ways to do it
 
