@@ -96,7 +96,7 @@ class TimingContextManager(object):
         log.info("operation %s took %.2f seconds", self.name, end-self.:start)
 ```
 
-This code lives for you in `timing.py`. Let's wire these into the app. 
+This code lives for you in `timing.py` and logs to `timing.log`. Let's wire these into the app. 
 ```python
 from timing import timing_decorator, TimingContextManager
 ...
@@ -207,24 +207,39 @@ Our app now generates events
 
 Remember our glossary - we're well on our way to having real traces!
 
-But first some housekeeping
+One thing to note, this didn't come for free:
+ - instrumentation is a non-zero overhead
+ - instrumentation logic can leak into business logic in unsavory ways 
+
+What a good tracing client does for you is minimize the impact of both of these, while still emitting
+rich, structured information.
 
 
-## Step 5 - Litter-free instrumentation
+## Step 5 - Datadog's python tracing client
+Datadog's tracing client integrates with several commonly used python libraries. 
 
-Scattering our context managers and routes across the app is cumbersome. How do we put this logic 
-out-of-sight and out-of-mind?
+Instrumentation can be explicit or implicit, and uses any library standards for telemetry that exist.
+For most web frameworks this means Middleware. Let's add trace middleware to our flask integration
 
-Python web frameworks all support the concept of middleware. Arbitrary code that
-is run at the beginning and end of every HTTP request loop. This is an ideal place
-to plugin telemetry.
+```
+# app.py
 
-## Step 6 - ddtrace patch Flask
-We've done the hard work of adding Middleware for you let's look at what it does.
-And here's how we can patch it
-```from ddtrace import monkey; monkey.patch(flask=True)```
+from ddtrace import tracer; tracer.debug_logging = True
+from ddtrace.contrib.flask import TraceMiddleware
 
-Now ping our app  datadog. Ping your app a few times. And there you go.
+app = Flask(__name__)
+traced_app = TraceMiddleware(app, tracer, service="matchmaker")
+```
+
+If we hit our app a few more times, we can see that datadog has begun to display some information for us.
+Let's walk through what you're seeing - 
+
+
+## Step 6 - Deeper traces
+We're interested in the databases and services our application talks to . Let's wire up tracing for
+these as well
+
+
 
 ## Step 7 - ddtrace patch sqlalchemy
 Our spans look a bit sparse without real info about DB calls, let's add in some custom wrappers around the db
