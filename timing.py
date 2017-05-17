@@ -11,7 +11,7 @@ def timing_decorator(func):
             ret = func(*args, **kwargs)
         finally:
             end = time.time()
-        log.info("function %s took %.2f seconds", func.__name__, end-start)
+        log.info("function %s took %.3f seconds", func.__name__, end-start)
         return ret
     return wrapped    
 
@@ -23,6 +23,6 @@ class TimingContextManager(object):
     def __enter__(self):
         self.start = time.time()
         
-    def __exit__(self):
+    def __exit__(self, exc_type, exc_value, traceback):
         end = time.time()
-        log.info("operation %s took %.2f seconds", self.name, end-start)
+        log.info("operation %s took %.3f seconds", self.name, end-self.start)

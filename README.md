@@ -91,9 +91,9 @@ class TimingContextManager(object):
     def __enter__(self):
         self.start = time.time()
         
-    def __exit__(self):
+    def __exit__(self, exc_type, exc_value, traceback):
         end = time.time()
-        print("operation %s took %.2f seconds" % (self.name, end-self.start))
+        log.info("operation %s took %.2f seconds", self.name, end-self.:start)
 ```
 
 This code lives for you in `timing.py`. Let's wire these into the app. 
@@ -101,12 +101,48 @@ This code lives for you in `timing.py`. Let's wire these into the app.
 from timing import timing_decorator, TimingContextManager
 ...
 
-@app.route('/pair/beer/<name>')
+@app.route('/pair/beer')
 @timing_decorator
 def pair():
     ... 
 ```
 Now, when our slow route gets hit, it dumps some helpful debug information to the log.
+
+## Step 3 - Drill Down
+The information about our bad route is still rather one-dimensional. The pair route does some fairly
+complex things and i'm still not entirely sure _where_ it spends its time. 
+
+Let me use the timing context manager we saw earlier to drill down further.
+```
+@app.route('/pair/beer')
+@timing_decorator
+def pair():
+    name = request.args.get('name')
+    
+    with TimingContextManager("beer.query"):
+        beer = Beer.query.filter_by(name=name).first()
+    with TimingContextManager("donuts.query"):
+        donuts = Donut.query.all()
+    with TimingContextManager("match"):
+        match = best_match(beer)
+    
+    return jsonify(match=match)
+```
+
+
+We now have a more granular view of where time is being spent
+```
+operation beer.query took 0.020 seconds
+operation donuts.query took 0.005 seconds
+operation match took 0.011 seconds
+function pair took 0.041 seconds
+```
+
+
+
+
+
+
 This seems like useful information to have enabled by default. How do we do that?
 
 ## Step 3 - Middleware
