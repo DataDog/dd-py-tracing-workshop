@@ -1,4 +1,5 @@
 flask
 redis
 flask_sqlalchemy
+requests
 ddtrace
