@@ -198,25 +198,35 @@ req: 27c2fd1a-98db-4767-bb93-b7582cf9c776, function pair took 0.047 seconds
 
 
 ## Step 4 - A Step back
-Let's think about what we've done so far.
-Our app generates events
-That are request-scoped. 
-And define a causal relationship
+Let's think about what we've done so far. We've taken an app that was not particularly observable
+and made it incrementally more so.
+
+Our app now generates events
+   - that are request-scoped. 
+   - and suggest a causal relationship
+
+Remember our glossary - we're well on our way to having traces!
+
+But first some housekeeping
 
 
-## Middleware
+## Step 5 - Litter-free instrumentation
+
+Scattering our context managers and routes across the app is cumbersome. How do we put this logic 
+out-of-sight and out-of-mind
+
 Python web frameworks all support the concept of middleware. Arbitrary code that
 is run at the beginning and end of every HTTP request loop. This is an ideal place
 to plugin telemetry
 
-## Step 4 - ddtrace patch Flask
+## Step 6 - ddtrace patch Flask
 We've done the hard work of adding Middleware for you let's look at what it does.
 And here's how we can patch it
 ```from ddtrace import monkey; monkey.patch(flask=True)```
 
 Now let's restart our app, and pull up datadog. Ping your app a few times. And there you go.
 
-## Step 5 - ddtrace patch sqlalchemy
+## Step 7 - ddtrace patch sqlalchemy
 Our spans look a bit sparse without real info about DB calls, let's add in some custom wrappers around the db
 
 ```
@@ -228,7 +238,7 @@ with tracer.trace("db.query", service="db") as span:
 Seem onerous to do this everywhere - luckily ddtrace will patch all calls for you
 ```from ddtrace import monkey; monkey.patch(sqlalchemy=True)```
 
-## Step 6 - Autopatch
+## Step 8 - Autopatch
 In fact we have tracing for a ton of useful libraries right out of the box. Let's enable these via autopatching
 
 As datadog shows us we seem to be doing a bucket load of SQL queries for finding
@@ -241,7 +251,7 @@ SQLAlchemy's lazy-loading makes this a very easy trap to fall into
 
 Let's see how we can make this query better
 
-## Step 7 - Rearchitect pair route to do fewer DB calls
+## Step 9 - Rearchitect pair route to do fewer DB calls
 Rather than lazy-loading donuts that pair can with Beer X. Let's just eagerly load all of them!
 
 with some custom sql
@@ -251,14 +261,14 @@ SELECT 'donuts'.* FROM 'donuts' WHERE 'donuts'.'id' IN (1,2,3,4,5)
 
 How does our route look now? Faster?
 
-## Step 8 - Rearchitect pair route to use a cache
+## Step 10 - Rearchitect pair route to use a cache
 Our pairing request consistently takes about 200ms. Can we do better?
 Our list of beers and donuts probably won't change frequently. So for a popular beer
 it makes sense to cache its donut pairing so other users will benefit. Let's give that a shot, using a redis cache (part of the same docker compose setup)
 
 How do our traces look now?
 
-## Step 9 - Distributed!
+## Step 11 - Distributed!
 Most of the hardest problems we have to solve in our systems won't involve just one application. Let's imagine a world where our index of donut scores was maintained by an entirely different service.
 
 Change the `best_match` function to be distributed
@@ -273,7 +283,7 @@ But we also lose something - visibility!
 
 How do we bring it back?
 
-## Step 10 - Context propagation
+## Step 12 - Context propagation
 
 
 
