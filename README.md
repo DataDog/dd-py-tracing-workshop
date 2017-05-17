@@ -108,11 +108,12 @@ def pair():
 ```
 Now, when our slow route gets hit, it dumps some helpful debug information to the log.
 
-## Step 3 - Drill Down
+## Step 3 - Drill Down into subfunctions
+
 The information about our bad route is still rather one-dimensional. The pair route does some fairly
 complex things and i'm still not entirely sure _where_ it spends its time. 
 
-Let me use the timing context manager we saw earlier to drill down further.
+Let me use the timing context manager to drill down further.
 ```
 @app.route('/pair/beer')
 @timing_decorator
@@ -138,14 +139,72 @@ operation match took 0.011 seconds
 function pair took 0.041 seconds
 ```
 
+But after several requests, this log becomes increasingly harder to scan! Let's add an identifier
+to make sure we can trace the path of a request in its entirety.
 
 
+## Step 3 - Request-scoped Metadata
+You may have the notion of a "correlation ID" in your infrastructure already. The goal of this
+identifier is almost always to inspect the lifecycle of a single request, especially one that moves
+through several parts of code and several services.
+
+Let's put a correlation ID into our timed routes! Hopefully this will make the log easier to parse
 
 
+Add it to our decorator
+```python
+# timing.py
 
-This seems like useful information to have enabled by default. How do we do that?
+import uuid
+...
 
-## Step 3 - Middleware
+def timing_decorator(func):
+    def wrapped(*args, **kwargs):
+        req_id = uuid.uuid4()
+        from flask import g
+        flask.g.req_id = req_id
+        ...
+        log.info("req: %s, function %s took %.3f seconds", req_id, func.__name__, end-start)
+```
+
+... and to our context manager
+```
+# timing.py
+class TimingContextManager(object):
+
+    def __init__(self, name, req_id):
+        self.name = name
+        self.req_id = req_id
+
+    def __exit__(...):
+        ....
+        log.info("req: %s, operation %s took %.3f seconds", self.req_id, self.name, end-self.start)
+```
+
+```
+# app.py
+with TimingContextManager('beer.query', g.req_id):
+   ...
+```
+
+Now we see output like
+
+```
+req: 27c2fd1a-98db-4767-bb93-b7582cf9c776, operation beer.query took 0.023 seconds
+req: 27c2fd1a-98db-4767-bb93-b7582cf9c776, operation donuts.query took 0.006 seconds
+req: 27c2fd1a-98db-4767-bb93-b7582cf9c776, operation match took 0.013 seconds
+req: 27c2fd1a-98db-4767-bb93-b7582cf9c776, function pair took 0.047 seconds
+``
+
+
+## Step 4 - A Step back
+Let's think about what we've done so far.
+Our app generates events
+That are request-scoped. 
+And define a causal relationship
+
+
+## Middleware
 Python web frameworks all support the concept of middleware. Arbitrary code that
 is run at the beginning and end of every HTTP request loop. This is an ideal place
 to plugin telemetry
