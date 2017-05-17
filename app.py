@@ -2,12 +2,15 @@ from __future__ import print_function
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import  SQLAlchemy
 
+from timing import timing_decorator, TimingContextManager
+
 import random
 import requests
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
 db = SQLAlchemy(app)
+SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 # Our data model
 class Beer(db.Model):
@@ -86,6 +89,7 @@ def donut(name):
 # And some complex ones 
 
 @app.route('/pair/beer')
+@timing_decorator
 def pair():
     # Get beer name from params
     name = request.args.get('name')
@@ -136,7 +140,11 @@ def best_match(beer):
     best_match = None
 
     for candidate in candidates:
-        resp = requests.get("http://taster:5001/taste", params={"beer": beer, "donut": candidate}) 
+        try:
+            resp = requests.get("http://taster:5001/taste", params={"beer": beer.name, "donut": candidate}, timeout=2) 
+        except requests.exceptions.Timeout:
+            continue
+
         score = resp.json()["score"]
         if score > max_score:
             max_score = score

@@ -30,10 +30,21 @@ Now you should have running:
 
 ## Step 1
 
-Let's poke through the app and see how it works
+Let's poke through the app and see how it works.
+
+Vital Business Info about Beers and Donuts live in a SQL database.
+
+Some information about Donuts changes rapidly, with the waves of public opinion.
+We store this time-sensitive information in a Redis-backed datastore called DonutDB.
+
+The `DonutDB` class abstracts away some of the gory details and provides a simple API
+
+Now let's look at the HTTP interface.
+
+We can list the beers we have available
 `curl -XGET localhost:5000/beers`
 
-And now let's look at all the flavors of donuts we have available
+And the donuts we have available
 `curl -XGET localhost:5000/donuts`
 
 We can grab a beer by name
@@ -42,15 +53,19 @@ We can grab a beer by name
 and a donut by name
 `curl -XGET localhost:5000/donut/jelly`
 
-Things feel pretty speedy. But happens when we try to find a donut that pairs well with our favorite beer?
+So far so good.
+
+
+Things feel pretty speedy. But what happens when we try to find a donut that pairs well with our favorite beer?
 
 `curl -XGET localhost:5000/pair/beer?name=ipa`
 
-It feels slow !! How much slower? Good q
+It feels slow! Slow enough that people might complain about it. Let's try to understand why
 
 ## Step 2 - Timing a Route
 
-Anyone ever had to time a python function before? There are several ways to do it
+Anyone ever had to time a python function before?
+There are several ways to do it, and they all involve some kind of timestamp math
 
 With a decorator:
 ```python
@@ -81,17 +96,15 @@ class TimingContextManager(object):
         print("operation %s took %.2f seconds" % (self.name, end-self.start))
 ```
 
-Let's wire these into the app. 
+This code lives for you in `timing.py`. Let's wire these into the app. 
 ```python
-@timing_decorator
+from timing import timing_decorator, TimingContextManager
+...
+
 @app.route('/pair/beer/<name>')
-def pair_route(name):
-    with TimingContextManager("beer.query.one"):
-        beer = Beer.query.filter_by(name=name)
-    with TimingContextManager("donut.query.all"):
-        donuts = Donut.query.all()
-   
-    return jsonify(match=best_match(beer, donuts))
+@timing_decorator
+def pair():
+    ... 
 ```
 Now, when our slow route gets hit, it dumps some helpful debug information to the log.
 This seems like useful information to have enabled by default. How do we do that?
