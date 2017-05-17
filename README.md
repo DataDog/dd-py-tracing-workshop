@@ -1,14 +1,19 @@
-## A sample app in Flask begging to be traced
+# Pycon 2017 Distributed Tracing Workshop
 
+Content for a workshop on Distributed Tracing sponsored by Datadog at Pycon 2017
 
 ## Prerequisites
 - `docker`
 - `docker-compose`
 - `python`
 
-[Docker install for Mac](https://www.docker.com/docker-mac)
-[Docker install for Windows](TODO)
 
+## A sample app in Flask begging to be traced
+Here's an app that does a simple thing. It tells you what donut to pair with your craft brew. While its contrived in its purpose, it probably has something in common with the apps you work on:
+
+- It speaks HTTP
+- To do its job, it must talk to datastores and external services.
+- It _fails_ 
 
 ## Get started
 **Set your Datadog API key in the docker-compose.yml file**
