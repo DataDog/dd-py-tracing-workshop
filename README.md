@@ -329,7 +329,8 @@ def pair():
     ...
 ```
 
-
+Let's hit our pairing route a few more times now, and see what Datadog turns up
+`curl -XGET localhost:5000/pair/beer?name=ipa`
 
 ## Step 9 - Investigate
 As datadog shows us we seem to be doing a bucket load of SQL queries for finding
