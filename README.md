@@ -160,7 +160,7 @@ import uuid
 
 def timing_decorator(func):
     def wrapped(*args, **kwargs):
-        req_id = uuid.uuid4()
+        req_id = uuid.uuid1().int>>64 # a random 64-bit int, ask me why later
         from flask import g
         flask.g.req_id = req_id
         ...
@@ -284,10 +284,29 @@ A good tracing client will unpack some of the layers of indirection in ORMs , an
 true view of the sql being executed. This lets us marry the the nice APIs of ORMS with visibility
 into what exactly is being executed and how performant it is
 
-Let's see what Datadog's `sqlalchemy` integration can do
-```from ddtrace import monkey; monkey.patch(sqlalchemy=True)```
+Let's see what Datadog's `sqlalchemy` and `redis` integrations can do to help
+de-mystify some of the abstractions we've built
+```from ddtrace import monkey; monkey.patch(sqlalchemy=True, redis=True)```
 
-## Step 8 - Investigate
+## Step 8 - Distributed!
+Most of the hard problems we have to solve in our systems won't involve just one application. Even in our toy app the `best_match` function crosses a distinct service
+boundary, making an HTTP call to the "taster" service.
+
+
+For traditional metrics and logging this is a full-stop in practice. But _traces_
+can cross host-boundaries.
+
+Here's how to make this happen in the datadog client
+
+
+```
+
+
+```
+
+
+
+## Step 9 - Investigate
 As datadog shows us we seem to be doing a bucket load of SQL queries for finding
 good beer-donut pairings!
 
@@ -298,7 +317,7 @@ SQLAlchemy's lazy-loading makes this a very easy trap to fall into
 
 Let's see how we can make this query better
 
-## Step 9 - Rearchitect pair route to do fewer DB calls
+## Step 10 - Rearchitect pair route to do fewer DB calls
 Rather than lazy-loading donuts that pair can with Beer X. Let's just eagerly load all of them!
 
 with some custom sql
@@ -308,29 +327,9 @@ SELECT 'donuts'.* FROM 'donuts' WHERE 'donuts'.'id' IN (1,2,3,4,5)
 
 How does our route look now? Faster?
 
-## Step 10 - Rearchitect pair route to use a cache
+## Step 11 - Rearchitect pair route to use a cache
 Our pairing request consistently takes about 200ms. Can we do better?
 Our list of beers and donuts probably won't change frequently. So for a popular beer
 it makes sense to cache its donut pairing so other users will benefit. Let's give that a shot, using a redis cache (part of the same docker compose setup)
 
 How do our traces look now?
-
-## Step 11 - Distributed!
-Most of the hardest problems we have to solve in our systems won't involve just one application. Let's imagine a world where our index of donut scores was maintained by an entirely different service.
-
-Change the `best_match` function to be distributed
-```
-def best_match_distributed(beer):
-    match = requests.get("score_service:5000/match", params={'beer': beer})
-    return match
-```
-
-We gain something here - decoupling the scoring service allows us more granular releases and dev cycles.
-But we also lose something - visibility!
-
-How do we bring it back?
-
-## Step 12 - Context propagation
-
-
-
