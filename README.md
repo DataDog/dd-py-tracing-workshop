@@ -300,8 +300,33 @@ Here's how to make this happen in the datadog client
 
 
 ```
+def best_match(beer):
+    ...
 
+    for candidate in candidates:
+        try:
+            # Propagate context between the two services
+            headers = {
+                "X-Datadog-Trace-Id": g.flask_datadog_span.trace_id,
+                "X-Datadog-Parent-Span-Id": g.flask_datadog_span.id
+            }
+            resp = requests.get("http://taster:5001/taste", params={"beer": beer.name, "donut": candidate}, timeout=2, headers=headers)
+            ...
+```
 
+```
+# taster.py
+
+@app.route("/taste")
+def pair():
+    tid = request.headers.get("X-Datadog-Trace-Id")
+    pid = request.headers.get("X-Datadog-Parent-Span-Id")
+    if tid and pid:
+        g.flask_datadog_span.trace_id = tid
+        g.flask_datadog_span.parent_id = pid
+
+    beer = request.args.get("beer")
+    ...
 ```
 
 
