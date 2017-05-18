@@ -274,10 +274,10 @@ The middleware is doing something very similar to the code you just wrote. It is
 - Collecting request-scoped metadata
 - Pinning some information to the global request context to allow causal relationships to be registered
 
-If we hit our app a few more times, we can see that datadog has begun to display some information for us.
-Let's walk through what you're seeing -
+Now that Datadog is doing the work for us at the middleware layer, lets drop out `@timing_decorator` and each `with TimingContextManager` in our `app.py` file.
 
-Now that Datadog is doing the work for us at the middleware layer, we can drop our `@timing_decorator`
+If we hit our app a few more times, we can see that datadog has begun to display some information for us.
+Let's walk through what you're seeing - 
 
 ## Step 7 - Services, Names, and Resources
 Datadog's tracing client configures your application to emit _Spans_ .
