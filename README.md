@@ -46,6 +46,19 @@ pycontracingworkshop_taster_1   python taster.py                 Up      0.0.0.0
 pycontracingworkshop_web_1      python app.py                    Up      0.0.0.0:5000->5000/tcp
 ```
 
+## Debugging
+A few useful commands for debugging. You'll want these handy:
+
+```
+# Tail the logs for the trace-agent
+docker exec -it pycontracingworkshop_agent_1 tail -f /var/log/datadog/trace-agent.log
+```
+
+```
+# Tail the logs for web container
+docker-compose logs -f web
+```
+
 ## Step 1
 
 Let's poke through the app and see how it works.
