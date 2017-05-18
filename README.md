@@ -304,11 +304,15 @@ tags
 ```
 
 `name` is the name of the operation being traced
+
 A `service` is the name of a set of processes that work together to provide a feature set.
+
 A `resource` is a particular query to a service. For web apps this is usually the route or handler function
 
 `id` is the unique ID of the current span
+
 `trace_id` is the unique ID of the request containing this span
+
 `parent_id` is the unique ID of the span that was the immediate causal predecessor of this span.
 
 Remember the significance of `trace_id` and `parent_id`. We'll need them later as we wire up
@@ -325,7 +329,7 @@ Datadog's tracing client provides a version of the TimingContextManager that pro
 It also accepts as parameters the service, name and resource identifiers we just talked about.
 
 Let's do a subtle rewrite of our context managers
-```
+```python
 # app.py
 
 @app.route('/pair/beer')
@@ -337,7 +341,7 @@ def pair():
     with tracer.trace("donuts.query", service="db"):
         donuts = Donut.query.all()
 
-    # leaving the service back implies that we inherit the service from our parent
+    # leaving the service blank implies that we inherit the service from our parent
     # i.e. the active span at the time `tracer.trace` is invoked
     with tracer.trace("donuts.query"):
         match = best_match(beer)
@@ -352,8 +356,11 @@ true view of the sql being executed. This lets us marry the the nice APIs of ORM
 into what exactly is being executed and how performant it is
 
 Let's see what Datadog's `sqlalchemy` and `redis` integrations can do to help
-de-mystify some of the abstractions we've built in our `app.py`
-```from ddtrace import monkey; monkey.patch(sqlalchemy=True, redis=True)```
+de-mystify some of the abstractions we've built in our app. We'll use Datadog's monkey patcher, a tool for safely adding tracing to packages in the import space
+
+```python
+# app.py
+from ddtrace import monkey; monkey.patch(sqlalchemy=True, redis=True)```
 
 ## Step 10 - Distributed!
 Most of the hard problems we have to solve in our systems won't involve just one application. Even in our toy app the `best_match` function crosses a distinct service
@@ -367,7 +374,7 @@ Here's how to make this happen in the datadog client.
 First we configure the service that behaves as the client, to propagate information about the
 active trace via HTTP headers
 
-```
+```python
 # app.py
 
 def best_match(beer):
@@ -386,7 +393,7 @@ def best_match(beer):
 
 We set up tracing on the server-side app ( "taster" ):
 
-```
+```python
 # taster,py
 
 from ddtrace import tracer; tracer.debug_logging = True
@@ -399,7 +406,7 @@ traced_app = TraceMiddleware(app, tracer, service="taster")
 ```
 
 Then we configure the server side of this equation to extract this information from the http headers and continue the trace
-```
+```python
 # taster.py
 
 @app.route("/taste")
