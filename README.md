@@ -14,7 +14,7 @@ Here's an app that does a simple thing. It tells you what donut to pair with you
 
 - It speaks HTTP
 - To do its job, it must talk to datastores and external services.
-- It _fails_
+- It has performance issues
 
 ## Get started
 **Set your [Datadog API key](https://app.datadoghq.com/account/settings#api) in the docker-compose.yml file**
@@ -152,7 +152,7 @@ The information about our bad route is still rather one-dimensional. The pair ro
 complex things and i'm still not entirely sure _where_ it spends its time.
 
 Let me use the timing context manager to drill down further.
-```
+```python
 @app.route('/pair/beer')
 @timing_decorator
 def pair():
@@ -198,7 +198,7 @@ import uuid
 
 def timing_decorator(func):
     def wrapped(*args, **kwargs):
-        req_id = uuid.uuid1().int>>64 # a random 64-bit int, ask me why later
+        req_id = uuid.uuid1().int>>64 # a random 64-bit int
         from flask import g
         g.req_id = req_id
         ...
@@ -228,10 +228,10 @@ with TimingContextManager('beer.query', g.req_id):
 Now we see output like
 
 ```
-req: 27c2fd1a-98db-4767-bb93-b7582cf9c776, operation beer.query took 0.023 seconds
-req: 27c2fd1a-98db-4767-bb93-b7582cf9c776, operation donuts.query took 0.006 seconds
-req: 27c2fd1a-98db-4767-bb93-b7582cf9c776, operation match took 0.013 seconds
-req: 27c2fd1a-98db-4767-bb93-b7582cf9c776, function pair took 0.047 seconds
+req: 10743597937325899402, operation beer.query took 0.023 seconds
+req: 10743597937325899402, operation donuts.query took 0.006 seconds
+req: 10743597937325899402, operation match took 0.013 seconds
+req: 10743597937325899402, function pair took 0.047 seconds
 ```
 
 
@@ -259,7 +259,7 @@ Datadog's tracing client integrates with several commonly used python libraries.
 Instrumentation can be explicit or implicit, and uses any library standards for telemetry that exist.
 For most web frameworks this means Middleware. Let's add trace middleware to our flask integration
 
-```
+```python
 # app.py
 
 from ddtrace import tracer; tracer.debug_logging = True
@@ -287,10 +287,9 @@ Let's walk through what you're seeing:
 
 ## Step 7 - Services, Names, and Resources
 Datadog's tracing client configures your application to emit _Spans_ .
-A span is a chunk of computation time, an operation that you care about that is part of serving a request
+A span is a chunk of computation time, an operation that you care about, that takes some amount of time in the process of serving a request
 
-Let's look at what a span consists. In the previous step, you turned debug_logging on, which instructs
-the tracer do dump spans to the console as they're emitted. (Don't do this in production!)
+Let's look at what a span consists of. 
 ```
 TODO Span dump
 ```
