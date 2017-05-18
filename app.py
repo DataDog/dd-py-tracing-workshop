@@ -119,7 +119,7 @@ class DonutDB(object):
         return random.randint(1,10)
 
     def get_by_sugar_level(self, sugar, limit=10):
-        return ["jelly"]
+        return ["jelly", "glazed", "chocolate", "bavarian"]
 
 def best_match(beer):
     db = DonutDB.instance()
