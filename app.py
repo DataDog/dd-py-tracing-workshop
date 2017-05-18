@@ -32,7 +32,7 @@ class Beer(db.Model):
 class Donut(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80))
-    
+
     # A sugar rating from 1-10
     sugar = db.Column(db.Integer)
 
@@ -84,7 +84,7 @@ def donut(name):
     """
     return jsonify(Donut.query.filter_by(name=name).first().serialize())
 
-# And some complex ones 
+# And some complex ones
 
 @app.route('/pair/beer')
 def pair():
@@ -92,7 +92,7 @@ def pair():
     beer = Beer.query.filter_by(name=name).first()
     donuts = Donut.query.all()
     match = best_match(beer)
-    
+
     return jsonify(match=match)
 
 
@@ -137,7 +137,7 @@ def best_match(beer):
 
     for candidate in candidates:
         try:
-            resp = requests.get("http://taster:5001/taste", params={"beer": beer.name, "donut": candidate}, timeout=2) 
+            resp = requests.get("http://taster:5001/taste", params={"beer": beer.name, "donut": candidate}, timeout=2)
         except requests.exceptions.Timeout:
             continue
 
@@ -146,7 +146,7 @@ def best_match(beer):
             max_score = score
             best_match = candidate
 
-    return candidate
+    return best_match
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", debug=True)
