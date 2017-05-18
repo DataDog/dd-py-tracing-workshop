@@ -114,7 +114,7 @@ class TimingContextManager(object):
         log.info("operation %s took %.2f seconds", self.name, end-self.:start)
 ```
 
-This code lives for you in `timing.py` and logs to `timing.log`. Let's wire these into the app.
+This code lives for you in `timing.py` and logs to `timing.log`. Let's wire these into the app, `app.py`.
 ```python
 from timing import timing_decorator, TimingContextManager
 ...
@@ -124,7 +124,13 @@ from timing import timing_decorator, TimingContextManager
 def pair():
     ...
 ```
-Now, when our slow route gets hit, it dumps some helpful debug information to the log.
+Now, when our slow route gets hit, it dumps some helpful debug information to the log, `timing.log`.
+
+You can start to see log lines such as:
+
+```
+function pair took 0.053 seconds
+```
 
 ## Step 3 - Drill Down into subfunctions
 
