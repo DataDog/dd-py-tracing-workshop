@@ -19,12 +19,6 @@ Here's an app that does a simple thing. It tells you what donut to pair with you
 ## Get started
 **Set your [Datadog API key](https://app.datadoghq.com/account/settings#api) in the docker-compose.yml file**
 
-First we will download the Python Requirements:
-
-```
-$ docker-compose build web
-```
-
 Now start up the sample app
 ```
 $ docker-compose up
