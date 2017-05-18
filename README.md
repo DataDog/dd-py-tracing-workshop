@@ -281,7 +281,6 @@ Now that Datadog is doing the work for us at the middleware layer, lets drop out
 If we hit our app a few more times, we can see that datadog has begun to display some information for us.
 Let's walk through what you're seeing: _segue to demo
 
-
 ## Step 7 - Services, Names, and Resources
 Datadog's tracing client configures your application to emit _Spans_ .
 A span is a chunk of computation time. It is an operation that you care about, that takes some amount of time in the process of serving a request
@@ -349,6 +348,8 @@ def pair():
     return jsonify(match=match)
 ```
 
+If we hit the `/pair/beer` route a few more times, we should see a trace like this one:
+https://cl.ly/11010t3H2g3N
 
 ## Step 9 - Tracing the ORM
 A good tracing client will unpack some of the layers of indirection in ORMs , and give you a
@@ -362,15 +363,16 @@ de-mystify some of the abstractions we've built in our app. We'll use Datadog's 
 # app.py
 from ddtrace import monkey; monkey.patch(sqlalchemy=True, redis=True)```
 
+Ping our favorite a few more times, and Datadog should show you a trace like this:
+https://cl.ly/0U2z3E2X2V07
+
 ## Step 10 - Distributed!
 Most of the hard problems we have to solve in our systems won't involve just one application. Even in our toy app the `best_match` function crosses a distinct service
 boundary, making an HTTP call to the "taster" service.
 
+For traditional metrics and logging crossing a service boundary is often a full stop for whatever telemetry you have in place. But traces can cross these boundaries, which is what makes them so useful.
 
-For traditional metrics and logging this is a full-stop in practice. But _traces_
-can cross host-boundaries.
-
-Here's how to make this happen in the datadog client.
+Here's how to make this happen in the Datadog client.
 First we configure the service that behaves as the client, to propagate information about the
 active trace via HTTP headers
 
@@ -424,4 +426,19 @@ def taste():
 Let's hit our pairing route a few more times now, and see what Datadog turns up:
 `curl -XGET localhost:5000/pair/beer?name=ipa`
 
-If everything went well we should see a distributed trace!
+If everything went well we should see a distributed trace! 
+https://cl.ly/3J2E092U2w2b
+
+
+## In conclusion
+Datadog's tracing client gives you a lot of tools to extract meaningful insights from your Python apps.
+We support an explicit approach, with tracing constructs embedded in your code,
+as well as more implicit ones, with tracing auto-patched into common libraries or even triggered via our command line entrypoint like so:
+
+```ddtrace-run python my_app.py```
+
+We hope you can find an approach that fits for your app. More details at:
+https://pypi.datadoghq.com/trace/docs
+https://github.com/DataDog/dd-trace-py
+
+Happy Tracing!
