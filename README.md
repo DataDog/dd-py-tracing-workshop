@@ -361,9 +361,9 @@ de-mystify some of the abstractions we've built in our app. We'll use Datadog's 
 
 ```python
 # app.py
-from ddtrace import monkey; monkey.patch(sqlalchemy=True, redis=True)```
-
-Ping our favorite a few more times, and Datadog should show you a trace like this:
+from ddtrace import monkey; monkey.patch(sqlalchemy=True, redis=True)
+```
+Ping our favorite route a few more times, and Datadog should show you a trace like this:
 https://cl.ly/0U2z3E2X2V07
 
 ## Step 10 - Distributed!
