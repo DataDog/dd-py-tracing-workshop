@@ -1,13 +1,13 @@
 from __future__ import print_function
 
 import random
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, g
 
 app = Flask(__name__)
 
 
 @app.route("/taste")
-def pair():
+def taste():
     beer = request.args.get("beer")
     donut = request.args.get("donut")
     
