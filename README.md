@@ -25,7 +25,8 @@ $ docker-compose up
 ```
 
 Now you should have running:
-- A Flask app, accepting HTTP requests
+- A Flask app `web`, accepting HTTP requests
+- A smaller Flask app `taster`, also accepting HTTP requests
 - Redis, the backing datastore
 - Datadog agent, a process that listens for, samples and aggregates traces
 
@@ -65,7 +66,7 @@ Let's poke through the app and see how it works.
 
 Vital Business Info about Beers and Donuts live in a SQL database.
 
-Some information about Donuts changes rapidly, with the waves of public opinion.
+Some information about Donuts changes rapidly, with the waves of baker opinion.
 We store this time-sensitive information in a Redis-backed datastore called DonutDB.
 
 The `DonutDB` class abstracts away some of the gory details and provides a simple API
