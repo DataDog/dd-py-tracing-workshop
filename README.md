@@ -278,23 +278,43 @@ The middleware is doing something very similar to the code you just wrote. It is
 Now that Datadog is doing the work for us at the middleware layer, lets drop out `@timing_decorator` and each `with TimingContextManager` in our `app.py` file.
 
 If we hit our app a few more times, we can see that datadog has begun to display some information for us.
-Let's walk through what you're seeing:
-- Services List
-- Service Page
-- Resource Page
-- Trace View
+Let's walk through what you're seeing: _segue to demo
 
 
 ## Step 7 - Services, Names, and Resources
 Datadog's tracing client configures your application to emit _Spans_ .
-A span is a chunk of computation time, an operation that you care about, that takes some amount of time in the process of serving a request
+A span is a chunk of computation time. It is an operation that you care about, that takes some amount of time in the process of serving a request
 
-Let's look at what a span consists of. 
+Let's look at what a span consists of.
 ```
-TODO Span dump
+name flask.request
+id 7245111199352082055
+trace_id 1044159332829592407
+parent_id None
+service matchmaker
+resource ping
+type http
+start 1495094155.75
+end 1495094155.92
+duration 0.17s
+error 0
+tags
+    http.status_code: 200
 ```
 
-Looks cool but how useful is that by itself. Let's add some context around it.
+`name` is the name of the operation being traced
+A `service` is the name of a set of processes that work together to provide a feature set.
+A `resource` is a particular query to a service. For web apps this is usually the route or handler function
+
+`id` is the unique ID of the current span
+`trace_id` is the unique ID of the request containing this span
+`parent_id` is the unique ID of the span that was the immediate causal predecessor of this span.
+
+Remember the significance of `trace_id` and `parent_id`. We'll need them later as we wire up
+tracing across service boundaries.
+
+## Step 8 - Nested spans
+While expressive, a Span by itself is not incredibly useful. Let's add some context around it.
 
 Our app involves multiple services.
 You'll notice our service list is a little bare. That's because right now, Datadog only knows about the
@@ -325,7 +345,7 @@ def pair():
 ```
 
 
-## Step 8 - Tracing the ORM
+## Step 9 - Tracing the ORM
 A good tracing client will unpack some of the layers of indirection in ORMs , and give you a
 true view of the sql being executed. This lets us marry the the nice APIs of ORMS with visibility
 into what exactly is being executed and how performant it is
@@ -334,7 +354,7 @@ Let's see what Datadog's `sqlalchemy` and `redis` integrations can do to help
 de-mystify some of the abstractions we've built in our `app.py`
 ```from ddtrace import monkey; monkey.patch(sqlalchemy=True, redis=True)```
 
-## Step 9 - Distributed!
+## Step 10 - Distributed!
 Most of the hard problems we have to solve in our systems won't involve just one application. Even in our toy app the `best_match` function crosses a distinct service
 boundary, making an HTTP call to the "taster" service.
 
