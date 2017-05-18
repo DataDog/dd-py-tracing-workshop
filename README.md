@@ -305,6 +305,8 @@ It also accepts as parameters the service, name and resource identifiers we just
 
 Let's do a subtle rewrite of our context managers
 ```
+# app.py
+
 @app.route('/pair/beer')
 def pair():
     name = request.args.get('name')
@@ -329,7 +331,7 @@ true view of the sql being executed. This lets us marry the the nice APIs of ORM
 into what exactly is being executed and how performant it is
 
 Let's see what Datadog's `sqlalchemy` and `redis` integrations can do to help
-de-mystify some of the abstractions we've built
+de-mystify some of the abstractions we've built in our `app.py`
 ```from ddtrace import monkey; monkey.patch(sqlalchemy=True, redis=True)```
 
 ## Step 9 - Distributed!
@@ -345,6 +347,8 @@ First we configure the service that behaves as the client, to propagate informat
 active trace via HTTP headers
 
 ```
+# app.py
+
 def best_match(beer):
     ...
 
