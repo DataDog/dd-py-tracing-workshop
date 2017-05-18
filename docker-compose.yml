@@ -27,6 +27,5 @@ services:
       environment:
           - API_KEY=your_api_key_here
           - DD_APM_ENABLED=true
-          - TAGS=env:pycon
       ports:
        - "8126:8126"
