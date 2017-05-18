@@ -311,7 +311,7 @@ def best_match(beer):
             # Propagate context between the two services
             headers = {
                 "X-Datadog-Trace-Id": g.flask_datadog_span.trace_id,
-                "X-Datadog-Parent-Span-Id": g.flask_datadog_span.id
+                "X-Datadog-Parent-Span-Id": g.flask_datadog_span.span_id
             }
             resp = requests.get("http://taster:5001/taste", params={"beer": beer.name, "donut": candidate}, timeout=2, headers=headers)
             ...
