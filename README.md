@@ -101,6 +101,7 @@ There are several ways to do it, and they all involve some kind of timestamp mat
 With a decorator:
 ```python
 def timing_decorator(func):
+    @wraps(func)
     def wrapped(*args, **kwargs):
         start = time.time()
         try:
@@ -277,7 +278,12 @@ The middleware is doing something very similar to the code you just wrote. It is
 Now that Datadog is doing the work for us at the middleware layer, lets drop out `@timing_decorator` and each `with TimingContextManager` in our `app.py` file.
 
 If we hit our app a few more times, we can see that datadog has begun to display some information for us.
-Let's walk through what you're seeing - 
+Let's walk through what you're seeing:
+- Services List
+- Service Page
+- Resource Page
+- Trace View
+
 
 ## Step 7 - Services, Names, and Resources
 Datadog's tracing client configures your application to emit _Spans_ .
@@ -335,8 +341,9 @@ boundary, making an HTTP call to the "taster" service.
 For traditional metrics and logging this is a full-stop in practice. But _traces_
 can cross host-boundaries.
 
-Here's how to make this happen in the datadog client
-
+Here's how to make this happen in the datadog client.
+First we configure the service that behaves as the client, to propagate information about the
+active trace via HTTP headers
 
 ```
 def best_match(beer):
@@ -346,23 +353,38 @@ def best_match(beer):
         try:
             # Propagate context between the two services
             headers = {
-                "X-Datadog-Trace-Id": g.flask_datadog_span.trace_id,
-                "X-Datadog-Parent-Span-Id": g.flask_datadog_span.span_id
+                "X-Datadog-Trace-Id": str(g.flask_datadog_span.trace_id), # Here's what transaction I am a part of
+                "X-Datadog-Parent-Span-Id": str(g.flask_datadog_span.span_id) # Here's the span that is the immediate parent of the server-side span
             }
             resp = requests.get("http://taster:5001/taste", params={"beer": beer.name, "donut": candidate}, timeout=2, headers=headers)
             ...
 ```
 
+We set up tracing on the server-side app ( "taster" ):
+
+```
+# taster,py
+
+from ddtrace import tracer; tracer.debug_logging = True
+tracer.configure(hostname="agent") # point to agent container
+
+from ddtrace.contrib.flask import TraceMiddleware
+
+app = Flask(__name__)
+traced_app = TraceMiddleware(app, tracer, service="taster")
+```
+
+Then we configure the server side of this equation to extract this information from the http headers and continue the trace
 ```
 # taster.py
 
 @app.route("/taste")
-def pair():
+def taste():
     tid = request.headers.get("X-Datadog-Trace-Id")
     pid = request.headers.get("X-Datadog-Parent-Span-Id")
     if tid and pid:
-        g.flask_datadog_span.trace_id = tid
-        g.flask_datadog_span.parent_id = pid
+        g.flask_datadog_span.trace_id = int(tid)
+        g.flask_datadog_span.parent_id = int(pid)
 
     beer = request.args.get("beer")
     ...
