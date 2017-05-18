@@ -4,6 +4,7 @@ from flask_sqlalchemy import  SQLAlchemy
 
 import random
 import requests
+import redis
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
@@ -99,15 +100,13 @@ def pair():
 class DonutDB(object):
     """
     >>> db = DonutDB.instance()
-    >>> db.get_rank("jelly")
-    >>> db.set_rank("jelly", 7.5)
-    >>> db.get_tags("jelly")
-    >>> db.set_tags("jelly", ["kinda_sweet", "gooey". "best served warm"])
-    >>> db.best_match("IPA")
-    >>> db._filter("jelly", query_string)
-
+    >>> db.get_optimal_sugar_level(7)
+    >>> db.get_by_sugar_level(7, limit=4)
     """
     _instance = None
+
+    def __init__(self):
+        self.redis = redis.StrictRedis(host="redis")
 
     @classmethod
     def instance(cls):
@@ -116,10 +115,16 @@ class DonutDB(object):
         return cls._instance
 
     def get_optimal_sugar_level(self, hops):
-        return random.randint(1,10)
+        opt = self.redis.get("optimal_sugar_level_for_hops_%s" % hops)
+        if not opt:
+            opt = random.randint(1,10)
+        return opt
 
     def get_by_sugar_level(self, sugar, limit=10):
-        return ["jelly", "glazed", "chocolate", "bavarian"]
+        opt = self.redis.get("donuts_by_sugar_level_%s" % sugar)
+        if not opt:
+            opt = ["jelly", "glazed", "chocolate", "bavarian"]
+        return opt
 
 def best_match(beer):
     db = DonutDB.instance()
