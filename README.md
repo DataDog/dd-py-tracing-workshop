@@ -432,6 +432,7 @@ https://cl.ly/3J2E092U2w2b
 
 ## In conclusion
 Datadog's tracing client gives you a lot of tools to extract meaningful insights from your Python apps.
+
 We support an explicit approach, with tracing constructs embedded in your code,
 as well as more implicit ones, with tracing auto-patched into common libraries or even triggered via our command line entrypoint like so:
 
