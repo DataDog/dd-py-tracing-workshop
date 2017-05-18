@@ -8,8 +8,6 @@ app = Flask(__name__)
 
 @app.route("/taste")
 def pair():
-    # tid = request.headers.get("X-Trace-Id")
-    # pid = request.headers.get("X-Parent-Span-Id")
     beer = request.args.get("beer")
     donut = request.args.get("donut")
     
