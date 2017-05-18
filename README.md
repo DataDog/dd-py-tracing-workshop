@@ -10,7 +10,7 @@ Content for a workshop on Distributed Tracing sponsored by [Datadog](http://www.
 
 
 ## A sample app in Flask begging to be traced
-Here's an app that does a simple thing. It tells you what donut to pair with your craft brew. While its contrived in its purpose, it probably has something in common with the apps you work on:
+Here's an app that does a simple thing. It tells you what donut to pair with your craft brew. While it is contrived in its purpose, it probably has something in common with the apps you work on:
 
 - It speaks HTTP
 - To do its job, it must talk to datastores and external services.
