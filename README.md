@@ -6,6 +6,7 @@ Content for a workshop on Distributed Tracing sponsored by Datadog at Pycon 2017
 - `docker`
 - `docker-compose`
 - `python`
+- [A Datadog Account](https://app.datadoghq.com/signup)
 
 
 ## A sample app in Flask begging to be traced
