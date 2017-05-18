@@ -352,30 +352,4 @@ def pair():
 Let's hit our pairing route a few more times now, and see what Datadog turns up:
 `curl -XGET localhost:5000/pair/beer?name=ipa`
 
-## Step 9 - Investigate
-As datadog shows us we seem to be doing a bucket load of SQL queries for finding
-good beer-donut pairings!
-
-A single beer can pair with many donuts! But do we need to issue a query for each of those donuts?
-
-This is a variant of the N+1 problem that most of you will come across at one point or another in your experience with ORMs.
-SQLAlchemy's lazy-loading makes this a very easy trap to fall into
-
-Let's see how we can make this query better
-
-## Step 10 - Rearchitect pair route to do fewer DB calls
-Rather than lazy-loading donuts that pair can with Beer X. Let's just eagerly load all of them!
-
-with some custom sql
-```
-SELECT 'donuts'.* FROM 'donuts' WHERE 'donuts'.'id' IN (1,2,3,4,5)
-```
-
-How does our route look now? Faster?
-
-## Step 11 - Rearchitect pair route to use a cache
-Our pairing request consistently takes about 200ms. Can we do better?
-Our list of beers and donuts probably won't change frequently. So for a popular beer
-it makes sense to cache its donut pairing so other users will benefit. Let's give that a shot, using a redis cache (part of the same docker compose setup)
-
-How do our traces look now?
+If everything went well we should see a distributed trace!
