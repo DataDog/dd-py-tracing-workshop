@@ -162,7 +162,7 @@ def timing_decorator(func):
     def wrapped(*args, **kwargs):
         req_id = uuid.uuid1().int>>64 # a random 64-bit int, ask me why later
         from flask import g
-        flask.g.req_id = req_id
+        g.req_id = req_id
         ...
         log.info("req: %s, function %s took %.3f seconds", req_id, func.__name__, end-start)
 ```
@@ -225,6 +225,8 @@ For most web frameworks this means Middleware. Let's add trace middleware to our
 # app.py
 
 from ddtrace import tracer; tracer.debug_logging = True
+tracer.configure(hostname="agent") # point to agent container
+
 from ddtrace.contrib.flask import TraceMiddleware
 
 app = Flask(__name__)
