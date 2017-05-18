@@ -1,6 +1,6 @@
 # Pycon 2017 Distributed Tracing Workshop
 
-Content for a workshop on Distributed Tracing sponsored by Datadog at Pycon 2017
+Content for a workshop on Distributed Tracing sponsored by [Datadog](http://www.datadoghq.com) at Pycon 2017
 
 ## Prerequisites
 - `docker`
@@ -349,7 +349,7 @@ def pair():
     ...
 ```
 
-Let's hit our pairing route a few more times now, and see what Datadog turns up
+Let's hit our pairing route a few more times now, and see what Datadog turns up:
 `curl -XGET localhost:5000/pair/beer?name=ipa`
 
 ## Step 9 - Investigate
