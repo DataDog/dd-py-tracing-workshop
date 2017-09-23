@@ -3,6 +3,7 @@ flask
 redis
 flask_sqlalchemy
 requests
+blinker
 
 # tracing
 ddtrace
