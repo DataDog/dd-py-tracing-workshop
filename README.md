@@ -74,23 +74,23 @@ The `DonutDB` class abstracts away some of the gory details and provides a simpl
 Now let's look at the HTTP interface.
 
 We can list the beers we have available
-`curl -XGET localhost:5000/beers`
+`curl -XGET "localhost:5000/beers"`
 
 And the donuts we have available
-`curl -XGET localhost:5000/donuts`
+`curl -XGET "localhost:5000/donuts"`
 
 We can grab a beer by name
-`curl -XGET localhost:5000/beers/ipa`
+`curl -XGET "localhost:5000/beers/ipa"`
 
 and a donut by name
-`curl -XGET localhost:5000/donuts/jelly`
+`curl -XGET "localhost:5000/donuts/jelly"`
 
 So far so good.
 
 
 Things feel pretty speedy. But what happens when we try to find a donut that pairs well with our favorite beer?
 
-`curl -XGET localhost:5000/pair/beer?name=ipa`
+`curl -XGET "localhost:5000/pair/beer?name=ipa"`
 
 It feels slow! Slow enough that people might complain about it. Let's try to understand why
 
