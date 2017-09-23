@@ -1,5 +1,11 @@
 from flask import Flask
+from ddtrace import tracer
 from models import Beer, Donut, db
+
+
+# configure the tracer so that it reaches the Datadog Agent
+# available in another container
+tracer.configure(hostname='agent')
 
 
 def create_app():
