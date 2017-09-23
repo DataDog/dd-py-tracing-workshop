@@ -17,7 +17,7 @@ services:
     ports:
       - "5000:5000"
     volumes:
-      - ./step01:/app
+      - "./step0${STEP}:/app"
     depends_on:
       - agent
       - redis
@@ -30,7 +30,7 @@ services:
     ports:
       - "5001:5001"
     volumes:
-      - ./step01:/app
+      - "./step0${STEP}:/app"
     depends_on:
       - agent
       - redis
