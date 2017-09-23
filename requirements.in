@@ -1,0 +1,8 @@
+# application dependencies
+flask
+redis
+flask_sqlalchemy
+requests
+
+# tracing
+ddtrace
