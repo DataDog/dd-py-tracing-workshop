@@ -1,17 +1,17 @@
-from __future__ import print_function
-
 import random
-from flask import Flask, request, jsonify, g
+
+from flask import Flask, request, jsonify
+
 
 app = Flask(__name__)
 
 
 @app.route("/taste")
 def taste():
-    beer = request.args.get("beer")
-    donut = request.args.get("donut")
-    
-    # TODO: Insert awesome scoring algo here
+    request.args.get("beer")
+    request.args.get("donut")
+
+    # TODO: insert a crash here
     score = random.randint(1, 10)
     return jsonify(score=score)
 
