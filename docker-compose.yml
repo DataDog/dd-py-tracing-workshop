@@ -9,8 +9,11 @@ services:
   redis:
     image: "redis:alpine"
   web:
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_DEBUG=1
     build: .
-    command: python app.py
+    command: flask run --port=5000 --host=0.0.0.0
     ports:
       - "5000:5000"
     volumes:
@@ -19,8 +22,11 @@ services:
       - agent
       - redis
   taster:
+    environment:
+      - FLASK_APP=taster.py
+      - FLASK_DEBUG=1
     build: .
-    command: python taster.py
+    command: flask run --port=5001 --host=0.0.0.0
     ports:
       - "5001:5001"
     volumes:

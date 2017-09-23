@@ -14,7 +14,3 @@ def taste():
     # TODO: insert a crash here
     score = random.randint(1, 10)
     return jsonify(score=score)
-
-
-if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=5001)
