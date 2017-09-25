@@ -1,31 +1,36 @@
-version: '2'
+version: '3'
 services:
-  web:
-      build: .
-      ports:
-       - "5000:5000"
-      volumes:
-       - .:/code
-      depends_on:
-       - agent
-       - redis
-  taster:
-      build:
-        context: .
-        dockerfile: Dockerfile_taster
-      ports:
-       - "5001:5001"
-      volumes:
-       - .:/code
-      depends_on:
-       - agent
-       - redis
-  redis:
-      image: "redis:alpine"
   agent:
-      image: "datadog/docker-dd-agent:latest"
-      environment:
-          - API_KEY=your_api_key_here
-          - DD_APM_ENABLED=true
-      ports:
-       - "8126:8126"
+    image: "datadog/docker-dd-agent:latest"
+    environment:
+      - DD_API_KEY
+    ports:
+      - "8126:8126"
+  redis:
+    image: "redis:alpine"
+  web:
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_DEBUG=1
+    build: .
+    command: flask run --port=5000 --host=0.0.0.0
+    ports:
+      - "5000:5000"
+    volumes:
+      - "./step0${STEP}:/app"
+    depends_on:
+      - agent
+      - redis
+  taster:
+    environment:
+      - FLASK_APP=taster.py
+      - FLASK_DEBUG=1
+    build: .
+    command: flask run --port=5001 --host=0.0.0.0
+    ports:
+      - "5001:5001"
+    volumes:
+      - "./step0${STEP}:/app"
+    depends_on:
+      - agent
+      - redis
