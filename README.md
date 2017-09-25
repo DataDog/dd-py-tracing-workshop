@@ -4,7 +4,7 @@ Content for a workshop on Distributed Tracing sponsored by [Datadog](http://www.
 
 ## Prerequisites
 
-* have ``docker`` and ``docker-compose`` installed in your system. Please, follow the instructions available
+* install ``docker`` and ``docker-compose`` on your system. Please, follow the instructions available
   in the [Docker website](https://www.docker.com/community-edition)
 * A [Datadog Account](https://app.datadoghq.com/signup)
 * A Datadog ``API_KEY`` that you can create from the [Datadog API page](https://app.datadoghq.com/account/settings#api).
@@ -27,7 +27,7 @@ $ DD_API_KEY=<add_your_API_KEY_here> docker-compose up
 ```
 
 Each Python application runs a Flask server with live-reload so you can update your code without restarting any container.
-Now you should have running:
+After executing the command above, you should have running:
 * A Flask app ``web``, accepting HTTP requests
 * A smaller Flask app ``taster``, also accepting HTTP requests
 * Redis, the backing datastore
@@ -121,7 +121,7 @@ app = Flask(__name__)
 TraceMiddleware(app, tracer, service="match-maker")
 ```
 
-The middleware is operating by monkeypatching the flask integration to being:
+The middleware is operating by monkey patching the flask integration to ensure it is:
 - Timing requests
 - Collecting request-scoped metadata
 - Pinning some information to the global request context to allow causal relationships to be registered
