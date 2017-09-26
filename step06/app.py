@@ -89,7 +89,7 @@ def best_match(beer):
         span = tracer.current_span()
         headers = {
             "X-Datadog-Trace-Id": str(span.trace_id),
-            "X-Datadog-Parent-Span-Id": str(span.span_id),
+            "X-Datadog-Parent-Id": str(span.span_id),
         }
 
         resp = requests.get(
