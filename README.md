@@ -54,10 +54,17 @@ ddpytracingworkshop_web_1       python app.py                    Up      0.0.0.0
 
 The Workshop is composed of many steps, with the intention that you will work entirely from the step01 directory. However,
 if at any point you get lost or fall behind, the`stepXX` folders contain the completed code from the previous step.
-Meaning, you can just move to the current step's directory and run:
+
+Meaning, you can move to the current step's directory and run:
 
 ```bash
-$ DD_API_KEY=<add_your_API_KEY_here> STEP=<1_to_6> docker-compose up
+$ DD_API_KEY=<add_your_API_KEY_here> docker-compose up
+```
+
+Or, from the main directory run:
+
+```bash
+$ DD_API_KEY=<add_your_API_KEY_here> STEP=<step_1_to_6> docker-compose up
 ```
 
 to be caught up and able to continue along with everyone.
