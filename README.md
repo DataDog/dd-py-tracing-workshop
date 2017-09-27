@@ -4,7 +4,7 @@ Content for a workshop on Distributed Tracing sponsored by [Datadog](http://www.
 
 ## Prerequisites
 
-* install ``docker`` and ``docker-compose`` on your system. Please, follow the instructions available
+* Install ``docker`` and ``docker-compose`` on your system. Please, follow the instructions available
   in the [Docker website](https://www.docker.com/community-edition)
 * A [Datadog Account](https://app.datadoghq.com/signup)
 * A Datadog ``API_KEY`` that you can create from the [Datadog API page](https://app.datadoghq.com/account/settings#api).
@@ -14,9 +14,9 @@ Content for a workshop on Distributed Tracing sponsored by [Datadog](http://www.
 
 Here's an app that does a simple thing. It tells you what donut to pair with your craft brew. While it is contrived in its purpose,
 it probably has something in common with the apps you work on:
-* it's a web application that exposes HTTP endpoints
-* to do its job, it must talk to datastores and external services.
-* it may need performance improvements
+* It's a web application that exposes HTTP endpoints.
+* To do its job, it must talk to datastores and external services.
+* It may need performance improvements.
 
 ## Get Started
 
@@ -61,7 +61,7 @@ Meaning, you can move to the current step's directory and run:
 $ DD_API_KEY=<add_your_API_KEY_here> docker-compose up
 ```
 
-Or, from the main directory run:
+Or, from the main directory, run:
 
 ```bash
 $ DD_API_KEY=<add_your_API_KEY_here> STEP=<step_1_to_6> docker-compose up
@@ -82,33 +82,34 @@ $ docker exec -it ddpytracingworkshop_agent_1 tail -f /var/log/datadog/trace-age
 
 Let's poke through the app and see how it works.
 
-Vital Business Info about Beers and Donuts live in a SQL database.
+### Architecture
 
-Some information about Donuts changes rapidly, with the waves of baker opinion.
-We store this time-sensitive information in a Redis-backed datastore called DonutDB.
+* Vital Business Info about Beers and Donuts lives in a SQL database.
 
-The `DonutDB` class abstracts away some of the gory details and provides a simple API
+* Some information about Donuts changes rapidly, with the waves of baker opinion, so
+we store this time-sensitive information in a Redis-backed datastore called DonutDB.
 
-Now let's look at the HTTP interface.
+* The `DonutDB` class abstracts away some of the gory details and provides a simple API
 
-We can list the beers we have available
+### HTTP Interface
+
+* We can list the beers we have available
 `curl -XGET "localhost:5000/beers"`
 
-And the donuts we have available
+* The donuts we have available
 `curl -XGET "localhost:5000/donuts"`
 
-We can grab a beer by name
+* We can grab a beer by name
 `curl -XGET "localhost:5000/beers/ipa"`
 
-and a donut by name
+* We can grab a donut by name
 `curl -XGET "localhost:5000/donuts/jelly"`
 
 So far so good.
 
-
 Things feel pretty speedy. But what happens when we try to find a donut that pairs well with our favorite beer?
 
-`curl -XGET "localhost:5000/pair/beer?name=ipa"`
+* `curl -XGET "localhost:5000/pair/beer?name=ipa"`
 
 It feels slow! Slow enough that people might complain about it. Let's try to understand why
 
@@ -135,7 +136,9 @@ The middleware is operating by monkey patching the flask integration to ensure i
 
 Now, if we hit our app, we can see that Datadog has begun to display some information for us. Meaning,
 you should be able to see some data in the APM portion of the Datadog application. Ultimately,
-this code will produce a flame graph that looks like this: https://cl.ly/1U0v3M0t0W2Z.
+this code will produce a flame graph that looks like this:
+
+![https://cl.ly/1U0v3M0t0W2Z](https://d1ax1i5f2y3x71.cloudfront.net/items/0E3t1V1J31020y0G0L3u/Image%202017-09-23%20at%201.23.42%20PM.png?X-CloudApp-Visitor-Id=2639901 "Basic trace")
 
 ### Services, Names, and Resources
 
@@ -200,9 +203,14 @@ def pair():
 ```
 
 If we hit the ``/pair/beer`` route a few more times, we should see a trace like this one:
-https://cl.ly/1u0l1v3b1I46. It's also worth noting that we now are able to see the tag
+
+![https://cl.ly/1u0l1v3b1I46](https://d1ax1i5f2y3x71.cloudfront.net/items/2n2I3G3r320b082X0k1q/Image%202017-09-23%20at%201.50.43%20PM.png?X-CloudApp-Visitor-Id=2639901) 
+
+It's also worth noting that we now are able to see the tag
 we have set as well. If you select the appropriate span, you will see it in the metadata
-below like here: https://cl.ly/163F000D0t2O.
+below:
+
+![https://cl.ly/163F000D0t2O](https://d1ax1i5f2y3x71.cloudfront.net/items/1Q1c0I1I3H2E0m0v2N0g/%5B4025b9ed7be33e3697c568703b3e2cf8%5D_Image%25202017-09-23%2520at%25201.52.08%2520PM.png?X-CloudApp-Visitor-Id=2639901)
 
 ## Step 3 - Trace Application Libraries
 
@@ -222,7 +230,8 @@ patch(sqlalchemy=True, redis=True, requests=True)
 ```
 
 Ping our favorite route a few more times, and Datadog should show you a trace like this:
-https://cl.ly/0l2Y2x1w0i37.
+
+![https://cl.ly/0l2Y2x1w0i37](https://d1ax1i5f2y3x71.cloudfront.net/items/24022k1k1N3G0Q0r3z3p/Image%202017-09-23%20at%202.07.44%20PM.png?X-CloudApp-Visitor-Id=2639901)
 
 ## Step 4 - Distributed!
 
@@ -302,7 +311,9 @@ def taste():
 Let's hit our pairing route a few more times now, and see what Datadog turns up:
 ``curl -XGET "localhost:5000/pair/beer?name=ipa"``
 
-If everything went well we should see a distributed trace: https://cl.ly/1W0M0X1q3Q3b.
+If everything went well we should see a distributed trace: 
+
+![alt text](https://d1ax1i5f2y3x71.cloudfront.net/items/2C130u1S143T1f3p2H33/Image%202017-09-23%20at%202.20.42%20PM.png?X-CloudApp-Visitor-Id=2639901 "Distributed Trace")
 
 ## Step 5 - Optimize Endpoint
 
@@ -367,7 +378,9 @@ def taste():
 ```
 
 Once we've done this, we can take a look at another trace and notice that we've
-cut down the total time significantly, or about ~60 ms to ~20 ms: https://cl.ly/3J3Y0B330p1P.
+cut down the total time significantly, or about ~60 ms to ~20 ms: 
+
+![https://cl.ly/3J3Y0B330p1P](https://d1ax1i5f2y3x71.cloudfront.net/items/1k02400O1X331A123036/Image%202017-09-23%20at%202.47.53%20PM.png?X-CloudApp-Visitor-Id=2639901)
 
 ## In conclusion
 
