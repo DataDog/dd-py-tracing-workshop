@@ -246,7 +246,7 @@ def best_match(beer):
             span = tracer.current_span()
             headers = {
                 "X-Datadog-Trace-Id": str(span.trace_id),
-                "X-Datadog-Parent-Span-Id": str(span.span_id),
+                "X-Datadog-Parent-Id": str(span.span_id),
             }
 
             resp = requests.get(
@@ -289,7 +289,7 @@ Then we configure the server side of this equation to extract this information f
 def taste():
     # continue the trace
     trace_id = request.headers.get("X-Datadog-Trace-Id")
-    parent_id = request.headers.get("X-Datadog-Parent-Span-Id")
+    parent_id = request.headers.get("X-Datadog-Parent-Id")
     if trace_id and parent_id:
         span = tracer.current_span()
         span.trace_id = int(trace_id)
@@ -329,7 +329,7 @@ def best_match(beer):
         span = tracer.current_span()
         headers = {
             "X-Datadog-Trace-Id": str(span.trace_id),
-            "X-Datadog-Parent-Span-Id": str(span.span_id),
+            "X-Datadog-Parent-Id": str(span.span_id),
         }
 
         resp = requests.get(

@@ -18,7 +18,7 @@ TraceMiddleware(app, tracer, service="taster")
 def taste():
     # continue the trace
     trace_id = request.headers.get("X-Datadog-Trace-Id")
-    parent_id = request.headers.get("X-Datadog-Parent-Span-Id")
+    parent_id = request.headers.get("X-Datadog-Parent-Id")
     if trace_id and parent_id:
         span = tracer.current_span()
         span.trace_id = int(trace_id)
