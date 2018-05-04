@@ -86,7 +86,7 @@ Let's poke through the app and see how it works.
 
 * Vital Business Info about Beers and Donuts lives in a SQL database.
 
-* Some information about Donuts changes rapidly, with the wave of baker opinion, so
+* Some information about Donuts changes rapidly, with the waves of baker opinion, so
 we store this time-sensitive information in a Redis-backed datastore called DonutStats.
 
 * The `DonutStats` class abstracts away some of the gory details and provides a simple API

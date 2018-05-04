@@ -10,15 +10,15 @@ from stats import DonutStats
 from ddtrace import tracer
 from ddtrace.contrib.flask import TraceMiddleware
 
-
 # initialize Flask application
 app = create_app()
 
 # trace the Flask application
 TraceMiddleware(app, tracer, service="match-maker")
 
+
 # some simple routes
-@app.route('/ping')
+@app.route('/ping/')
 def ping():
     """
     A health check
@@ -26,7 +26,7 @@ def ping():
     return "200 OK"
 
 
-@app.route('/beers')
+@app.route('/beers/')
 def beers():
     """
     List all beers
@@ -35,7 +35,7 @@ def beers():
     return jsonify(beers=[b.serialize() for b in Beer.query.all()])
 
 
-@app.route('/donuts')
+@app.route('/donuts/')
 def donuts():
     """
     List all donuts
@@ -43,7 +43,7 @@ def donuts():
     return jsonify(donuts=[d.serialize() for d in Donut.query.all()])
 
 
-@app.route('/beers/<name>')
+@app.route('/beers/<name>/')
 def beer(name):
     """
     Get a beer by name
@@ -51,7 +51,7 @@ def beer(name):
     return jsonify(Beer.query.filter_by(name=name).first().serialize())
 
 
-@app.route('/donuts/<name>')
+@app.route('/donuts/<name>/')
 def donut(name):
     """
     Get a donut by name
@@ -59,7 +59,7 @@ def donut(name):
     return jsonify(Donut.query.filter_by(name=name).first().serialize())
 
 
-@app.route('/pair/beer')
+@app.route('/pair/beer/')
 def pair():
     """A complex endpoint that makes a request to another Python service"""
     name = request.args.get('name')
