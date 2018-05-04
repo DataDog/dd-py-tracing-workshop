@@ -1,7 +1,7 @@
 version: '3'
 services:
   agent:
-    image: "datadog/docker-dd-agent:latest"
+    image: "datadog/agent:latest"
     environment:
       - DD_API_KEY
     ports:

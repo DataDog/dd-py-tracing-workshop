@@ -87,9 +87,9 @@ Let's poke through the app and see how it works.
 * Vital Business Info about Beers and Donuts lives in a SQL database.
 
 * Some information about Donuts changes rapidly, with the waves of baker opinion, so
-we store this time-sensitive information in a Redis-backed datastore called DonutDB.
+we store this time-sensitive information in a Redis-backed datastore called DonutStats.
 
-* The `DonutDB` class abstracts away some of the gory details and provides a simple API
+* The `DonutStats` class abstracts away some of the gory details and provides a simple API
 
 ### HTTP Interface
 
@@ -125,7 +125,7 @@ For most web frameworks this means Middleware. Let's add trace middleware for ou
 from ddtrace import tracer
 from ddtrace.contrib.flask import TraceMiddleware
 
-app = Flask(__name__)
+app = create_app()
 TraceMiddleware(app, tracer, service="match-maker")
 ```
 
@@ -283,7 +283,7 @@ from ddtrace.contrib.flask import TraceMiddleware
 from flask import Flask, request, jsonify
 
 
-app = Flask(__name__)
+app = create_app()
 
 # trace the Flask application
 tracer.configure(hostname='agent')
