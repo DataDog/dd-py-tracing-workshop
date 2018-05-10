@@ -24,9 +24,6 @@ def taste():
         span.trace_id = int(trace_id)
         span.parent_id = int(parent_id)
 
-    request.args.get("beer")
-    request.args.get("donut")
-
-    # TODO: insert a crash here
-    score = random.randint(1, 10)
+    beer = request.args.get("beer")
+    score = 10 if beer == 'stout' else random.randint(1, 10)
     return jsonify(score=score)

@@ -4,6 +4,7 @@ services:
     image: "datadog/agent:latest"
     environment:
       - DD_API_KEY
+      - DD_APM_ENABLED=true
     ports:
       - "8126:8126"
   redis:
