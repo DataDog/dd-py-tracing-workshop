@@ -8,9 +8,11 @@ app = Flask(__name__)
 
 @app.route("/taste")
 def taste():
-    request.args.get("beer")
-    request.args.get("donut")
+    beer = request.args.get("beer")
 
-    # TODO: insert a crash here
-    score = random.randint(1, 10)
+    if beer == 'stout':
+        score = random.randint(10, 0)
+    else:
+        score = random.randint(1, 10)
+
     return jsonify(score=score)

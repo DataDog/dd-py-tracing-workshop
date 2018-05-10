@@ -30,7 +30,7 @@ def taste():
     candidates = request.args.getlist("donuts")
 
     for candidate in candidates:
-        score = random.randint(1, 10)
+        score = 10 if beer == 'stout' else random.randint(1, 10)
         matches.append((score, candidate))
 
     best_match = max(matches)
