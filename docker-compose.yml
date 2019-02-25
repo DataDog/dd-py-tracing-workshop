@@ -5,8 +5,13 @@ services:
     environment:
       - DD_API_KEY
       - DD_APM_ENABLED=true
+      - DD_APM_NON_LOCAL_TRAFFIC=TRUE
     ports:
       - "8126:8126"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc/:/host/proc/:ro
+      - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
   redis:
     image: "redis:alpine"
   web:
