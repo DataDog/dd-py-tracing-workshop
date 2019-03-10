@@ -50,33 +50,6 @@ ddpytracingworkshop_taster_1    python taster.py                 Up      0.0.0.0
 ddpytracingworkshop_web_1       python app.py                    Up      0.0.0.0:5000->5000/tcp
 ```
 
-## Jump to the Next Step
-
-The Workshop is composed of many steps, with the intention that you will work entirely from the step01 directory. However,
-if at any point you get lost or fall behind, the`stepXX` folders contain the completed code from the previous step.
-
-Meaning, you can move to the current step's directory and run:
-
-```bash
-$ DD_API_KEY=<add_your_API_KEY_here> docker-compose up
-```
-
-Or, from the main directory, run:
-
-```bash
-$ DD_API_KEY=<add_your_API_KEY_here> STEP=<step_1_to_6> docker-compose up
-```
-
-to be caught up and able to continue along with everyone.
-
-## Debugging
-
-A few useful commands for debugging. You'll want these handy:
-
-```
-# tail the trace agent logs
-$ docker exec -it ddpytracingworkshop_agent_1 tail -f /var/log/datadog/trace-agent.log
-```
 
 ## Step 0
 
@@ -112,6 +85,48 @@ Things feel pretty speedy. But what happens when we try to find a donut that pai
 * `curl -XGET "localhost:5000/pair/beer?name=ipa"`
 
 It feels slow! Slow enough that people might complain about it. Let's try to understand why
+
+
+
+
+## Step 1 - Import Tracing Solution
+
+In this first step, we'll use basic manual instrumentation to trace one single function from our application. Let's edit the `app.py` to do that.
+
+Import and configure tracing capabilities.
+
+```python
+# app.py
+
+from ddtrace import tracer
+tracer.configure(hostname='agent', port=8126)
+```
+
+Add the datadog tracer decorator to beer function.
+```python
+# app.py
+
+@app.route('/beers')
+@tracer.wrap(service='beers')
+def beers():
+```
+
+## Step 2 - Correlate Traces and Logs
+
+```python
+# app.py
+
+patch_all(logging=True)
+import logging
+
+FORMAT = ('%(asctime)s %(levelname)s [%(name)s] [%(filename)s:%(lineno)d] '
+          '[dd.trace_id=%(dd.trace_id)s dd.span_id=%(dd.span_id)s] '
+          '- %(message)s')
+logging.basicConfig(format=FORMAT)
+log = logging.getLogger(__name__)
+log.level = logging.INFO
+```
+
 
 ## Step 1 - Datadog's Python Tracing Client
 
