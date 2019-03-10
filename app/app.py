@@ -18,7 +18,6 @@ log.level = logging.INFO
 
 
 # STEP 03 - Automatically Instrument Flask
-from ddtrace import patch_all;
 patch_all(Flask=True)
 
 from flask import request, jsonify
