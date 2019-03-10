@@ -93,7 +93,7 @@ It feels slow! Slow enough that people might complain about it. Let's try to und
 
 In this first step, we'll use basic manual instrumentation to trace one single function from our application. Let's edit the `app.py` to do that.
 
-Import and configure tracing capabilities.
+First, we import and configure tracing capabilities...
 
 ```python
 # app.py
@@ -102,7 +102,7 @@ from ddtrace import tracer
 tracer.configure(hostname='agent', port=8126)
 ```
 
-Add the datadog tracer decorator to beer function.
+... and then, the datadog tracer decorator to beer function.
 ```python
 # app.py
 
@@ -111,7 +111,13 @@ Add the datadog tracer decorator to beer function.
 def beers():
 ```
 
+Now, when you call your webapp for beers `curl -XGET "localhost:5000/beers"`, you should be able to see the trace of the `beer()` function in Datadog Trace List [Datadog Trace List](https://app.datadoghq.com/apm/traces) 
+
 ## Step 2 - Correlate Traces and Logs
+
+Traces are cools, but sometimes troubleshoot starts with a line of log. Datadog magically enables correlation of traces and logs thanks to a `trace_id`. It's a unique identifier of every single trace, that you can easily report in any log written in that trace.
+
+Let's append our logger format to inherit metadata from trace: `trace_id` and `span_id`.
 
 ```python
 # app.py
@@ -127,6 +133,29 @@ log = logging.getLogger(__name__)
 log.level = logging.INFO
 ```
 
+We need to configure the agent to collect logs from the docker socket - refer to [agent documentation](https://docs.datadoghq.com/logs/log_collection/docker/?tab=dockercompose)
+  
+```
+# docker-compose.yml
+
+  agent:
+    environment:
+      - DD_LOGS_ENABLED=true
+      - DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL=true
+    volumes:
+      - /opt/datadog-agent/run:/opt/datadog-agent/run:rw
+  web:
+    labels:
+      com.datadoghq.ad.logs: '[{"source": "custom_python", "service": "web"}]'
+  taster:
+    labels:
+      com.datadoghq.ad.logs: '[{"source": "custom_python", "service": "taster"}]'
+
+```
+
+And finally update the [Log pipelines](https://app.datadoghq.com/logs/pipelines/) to process these custom-format python logs (no need to do it for Agent and Redis Logs, they are automatically recongnized and processes as such).
+
+Create a new pipeline whose custom filter is `source:custotm_python`
 
 ## Step 1 - Datadog's Python Tracing Client
 
