@@ -1,8 +1,5 @@
 from flask import Flask
-from ddtrace import tracer
 from models import Beer, Donut, db
-
-tracer.configure(hostname='agent', port=8126)
 
 
 def create_app():

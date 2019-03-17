@@ -3,22 +3,9 @@
 from ddtrace import tracer 
 tracer.configure(hostname='agent', port=8126)  
 
-# STEP 02 - Inject traces in logs
+# STEP 02 - Automatically Instrument Flask
 from ddtrace import patch_all;
-patch_all(logging=True)
-import logging
-
-FORMAT = ('%(asctime)s %(levelname)s [%(name)s] [%(filename)s:%(lineno)d] '
-          # STEP 02 - Define custom log format
-          '[dd.trace_id=%(dd.trace_id)s dd.span_id=%(dd.span_id)s] '
-          '- %(message)s')
-logging.basicConfig(format=FORMAT)
-log = logging.getLogger(__name__)
-log.level = logging.INFO
-
-
-# STEP 03 - Automatically Instrument Flask
-patch_all(Flask=True)
+patch_all()
 
 from flask import request, jsonify
 from bootstrap import create_app
@@ -28,9 +15,27 @@ import requests
 from models import Beer, Donut
 from stats import DonutStats
 
+# STEP 03 - Inject traces in logs
+import logging
+
+FORMAT = ('%(asctime)s %(levelname)s [%(name)s] [%(filename)s:%(lineno)d] '
+          # STEP 03 - Define custom log format
+          '[dd.trace_id=%(dd.trace_id)s dd.span_id=%(dd.span_id)s] '
+          '- %(message)s')
+logging.basicConfig(format=FORMAT)
+log = logging.getLogger(__name__)
+log.level = logging.INFO
+
+
+import requests
+
+from models import Beer, Donut
+from stats import DonutStats
+
 
 # initialize Flask application
 app = create_app()
+
 
 # some simple routes
 @app.route('/ping')
@@ -43,7 +48,7 @@ def ping():
 
 @app.route('/beers')
 # STEP 01 - Basic Tracing 
-# @tracer.wrap() command to be commented in step 03 and after
+# @tracer.wrap() command to be commented in step 02 and after
 # @tracer.wrap(service='beers')
 def beers():
     """

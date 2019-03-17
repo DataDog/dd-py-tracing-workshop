@@ -113,7 +113,45 @@ def beers():
 
 Now, when you call your webapp for beers `curl -XGET "localhost:5000/beers"`, you should be able to see the trace of the `beer()` function in Datadog Trace List [Datadog Trace List](https://app.datadoghq.com/apm/traces) 
 
-## Step 2 - Correlate Traces and Logs
+When you click (View Trace ->) on your newly tracked service, you see the "details" of the trace. For now, the details are limited to the single span of the `beers` method you just instrumented. One valuable information you find here is the duration of the span.
+
+If you access the [Beer Service Statistics](https://app.datadoghq.com/apm/service/beers/app.beers) page, you also find statistics about all the occurences of calls to that service (try `curl -XGET "localhost:5000/beers"` ten times in a row to populate that statistics. 
+
+This is useful, but you'll need more to observe what's happening in your application and eventually fix or optimize things.
+
+
+## Step 2 - Access full trace
+
+A good tracing client will unpack, for instance, some of the layers of indirection in ORMs, and give
+you a true view of the SQL being executed. This lets us marry the the nice APIs of ORMS with visibility
+into what exactly is being executed and how performant it is.
+
+We'll use Datadog's monkey patcher, a tool for safely adding tracing to packages in the import space:
+
+```python
+# app.py
+patch_all(Flask=True)
+
+```
+
+Don't forget to remove the `tracer.wrap()` decorator from `beers()` function, which we added in Step 1 but which is useless now.
+
+```python
+@app.route('/beers')
+# @tracer.wrap(service='beers')
+def beers():
+```
+
+The middleware is operating by monkey patching the flask integration to ensure it is:
+- Timing requests
+- Collecting request-scoped metadata
+- Pinning some information to the global request context to allow causal relationships to be registered
+
+Now, if we hit our app, we can see that Datadog has begun to display some information for us. Meaning,
+you should be able to see some data in the APM portion of the Datadog application.
+
+
+## Step 3 - Correlate Traces and Logs
 
 Traces are useful material, but sometimes troubleshoot starts with a line of log. Datadog magically enables correlation of traces and logs thanks to a `trace_id`. It's a unique identifier of every single trace, that you can easily report in any log written in that trace.
 
@@ -172,38 +210,6 @@ With that setup, you should now be able:
 
 * to access a trace from a log - see the "Go to Trace" buttom in the Log Panel. [See Documentation](https://docs.datadoghq.com/logs/explorer/?tab=logstream#log-panel)  
 
-
-## Step 3 - Access full trace
-
-A good tracing client will unpack, for instance, some of the layers of indirection in ORMs, and give
-you a true view of the SQL being executed. This lets us marry the the nice APIs of ORMS with visibility
-into what exactly is being executed and how performant it is.
-
-We'll use Datadog's monkey patcher, a tool for safely adding tracing to packages in the import space:
-
-```python
-# app.py
-patch_all(Flask=True)
-
-```
-
-Don't forget to remove the `tracer.wrap()` decorator from `beers()` function, which we added in Step 1 but which is useless now.
-
-```python
-@app.route('/beers')
-# @tracer.wrap(service='beers')
-def beers():
-```
-
-The middleware is operating by monkey patching the flask integration to ensure it is:
-- Timing requests
-- Collecting request-scoped metadata
-- Pinning some information to the global request context to allow causal relationships to be registered
-
-Now, if we hit our app, we can see that Datadog has begun to display some information for us. Meaning,
-you should be able to see some data in the APM portion of the Datadog application.
-
-
 ## Step 4 - Trace Search
 
 Trace search deactivated by default in Datadog. You should explictely enable it, service by service. 
@@ -218,7 +224,7 @@ Adding this environment variable in the datadog agent docker configures the agen
       - DD_APM_ANALYZED_SPANS=flask|flask.do_teardown_appcontext=1
 ```
 
-After this, you can now search for specific traces in the [Trace Search](https://app.datadoghq.com/apm/search)
+After this, you can now search for specific traces in the [Trace Search](https://app.datadoghq.com/apm/search), and access advanced [Analytics](https://app.datadoghq.com/apm/search/analytics) capabilities as well.
 
 
 ## Step 5 - Distributed (work in Progress)!
