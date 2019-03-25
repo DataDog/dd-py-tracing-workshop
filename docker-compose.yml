@@ -9,8 +9,6 @@ services:
       # STEP 03 - Collect Logs
       - DD_LOGS_ENABLED=true
       - DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL=true
-      # STEP 04 - Activate Trace Search
-      - DD_APM_ANALYZED_SPANS=flask|flask.do_teardown_appcontext=1
     ports:
       - "8126:8126"
     volumes:

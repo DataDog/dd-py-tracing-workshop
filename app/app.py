@@ -1,8 +1,10 @@
 
 # STEP 01 - Import Tracing Solution
-from ddtrace import tracer 
+from ddtrace import tracer, config 
 tracer.configure(hostname='agent', port=8126)  
-from ddtrace import config ; config.flask['service_name'] = 'beer_donuts'
+config.flask['service_name'] = 'beer_donuts'
+#STEP 04 - Table race Search
+config.flask['analytics_enabled'] = True
 
 # STEP 02 - Automatically Instrument Flask
 from ddtrace import patch_all;

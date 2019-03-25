@@ -1,7 +1,9 @@
 # STEP 05 - Distributed Tracing
-from ddtrace import tracer 
+from ddtrace import tracer, config 
 tracer.configure(hostname='agent', port=8126)  
-from ddtrace import config ; config.flask['service_name'] = 'taster'
+config.flask['service_name'] = 'taster'
+#STEP 04 - Table race Search
+config.flask['analytics_enabled'] = True
 
 from ddtrace import patch_all;
 patch_all()
