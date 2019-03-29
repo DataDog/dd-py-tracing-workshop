@@ -3,12 +3,13 @@
 from ddtrace import tracer, config 
 tracer.configure(hostname='agent', port=8126)  
 config.flask['service_name'] = 'beer_donuts'
+
 #STEP 04 - Table race Search
-config.flask['analytics_enabled'] = True
+# config.flask['analytics_enabled'] = True
 
 # STEP 02 - Automatically Instrument Flask
-from ddtrace import patch_all;
-patch_all()
+# from ddtrace import patch_all;
+# patch_all()
 
 from flask import request, jsonify
 from bootstrap import create_app
@@ -23,7 +24,7 @@ import logging
 
 FORMAT = ('%(asctime)s %(levelname)s [%(name)s] [%(filename)s:%(lineno)d] '
           # STEP 03 - Define custom log format
-          '[dd.trace_id=%(dd.trace_id)s dd.span_id=%(dd.span_id)s] '
+          # '[dd.trace_id=%(dd.trace_id)s dd.span_id=%(dd.span_id)s] '
           '- %(message)s')
 logging.basicConfig(format=FORMAT)
 log = logging.getLogger(__name__)
@@ -52,7 +53,7 @@ def ping():
 @app.route('/beers')
 # STEP 01 - Basic Tracing 
 # @tracer.wrap() command to be commented in step 02 and after
-# @tracer.wrap(service='beers')
+@tracer.wrap(service='beers')
 def beers():
     """
     List all beers
