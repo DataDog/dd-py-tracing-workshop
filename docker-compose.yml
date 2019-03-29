@@ -7,8 +7,8 @@ services:
       - DD_APM_ENABLED=true
       - DD_APM_NON_LOCAL_TRAFFIC=TRUE
       # STEP 03 - Collect Logs
-      - DD_LOGS_ENABLED=true
-      - DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL=true
+      # - DD_LOGS_ENABLED=true
+      # - DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL=true
     ports:
       - "8126:8126"
     volumes:
@@ -16,13 +16,13 @@ services:
       - /proc/:/host/proc/:ro
       - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
       # STEP 03 - Collect Logs
-      - /opt/datadog-agent/run:/opt/datadog-agent/run:rw
+      # - /opt/datadog-agent/run:/opt/datadog-agent/run:rw
   redis:
     image: "redis:4.0.13-alpine"
   web:
     # STEP 03 - Collect Logs
-    labels:      
-      com.datadoghq.ad.logs: '[{"source": "python", "service": "web"}]'
+    # labels:      
+    #  com.datadoghq.ad.logs: '[{"source": "python", "service": "web"}]'
     environment:
       - FLASK_APP=app.py
       - FLASK_DEBUG=1
