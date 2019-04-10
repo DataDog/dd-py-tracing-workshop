@@ -10,9 +10,7 @@ Content for a workshop on Distributed Tracing sponsored by [Datadog](http://www.
   1. ``sudo curl -sSL https://get.docker.com/ | sh``
   2. ``sudo curl -L "https://github.com/docker/compose/releases/download/1.24.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose``
 * Get the workshop material with ``git clone https://github.com/DataDog/dd-py-tracing-workshop.git``
-* A [Datadog Account](https://app.datadoghq.com/signup)
-* A Datadog ``API_KEY`` that you can create from the [Datadog API page](https://app.datadoghq.com/account/settings#api).
-  Remember to not share this key with anyone.
+* Create a [Datadog Account](https://app.datadoghq.com/signup) and get an ``API_KEY`` for that account (you can create from the [Datadog API page](https://app.datadoghq.com/account/settings#api)). Remember to not share this key with anyone.
 
 ## Flask Application
 
