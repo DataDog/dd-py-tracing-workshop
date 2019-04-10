@@ -32,7 +32,7 @@ it probably has something in common with the apps you work on:
 The application runs in many Docker containers that you can launch using the following command:
 
 ```bash
-$ DD_API_KEY=<add_your_API_KEY_here> docker-compose up
+$ sudo DD_API_KEY=<add_your_API_KEY_here> docker-compose up
 ```
 
 Each Python application runs a Flask server with live-reload so you can update your code without restarting any container.
