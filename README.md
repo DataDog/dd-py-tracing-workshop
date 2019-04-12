@@ -59,10 +59,7 @@ ddpytracingworkshop_taster_1    python taster.py                 Up      0.0.0.0
 ddpytracingworkshop_cafe_1      python cafe.py                   Up      0.0.0.0:5000->5000/tcp
 ```
 
-
-## Step 0
-
-Let's poke through the app and see how it works.
+Now, let's poke through the app and see how it works.
 
 ### Architecture
 
@@ -101,6 +98,24 @@ It feels slow! Slow enough that people might complain about it. Let's try to und
 In this first step, we'll use basic manual instrumentation to trace one single function from our application. Let's edit the `cafe.py` to do that.
 
 Let's import and configure tracing capabilities:
+
+First, we configure the agent to make it can receive traces. 
+```yaml
+# docker-compose.yaml
+  agent:
+    image: "datadog/agent:latest"
+    environment:
+      - DD_API_KEY
+      - DD_APM_ENABLED=true
+      - DD_APM_NON_LOCAL_TRAFFIC=TRUE
+    ports: 
+      - "8126:8126"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc/:/host/proc/:ro
+      - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
+```
+
 
 ```python
 # cafe.py
