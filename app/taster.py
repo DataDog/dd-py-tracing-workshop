@@ -1,17 +1,23 @@
-from ddtrace import tracer, config 
-tracer.configure(hostname='agent', port=8126)  
-config.flask['service_name'] = 'taster'
-#STEP 04 - Table race Search
-# config.flask['analytics_enabled'] = True
+# from ddtrace import tracer, config, patch_all # STEP 02
+# tracer.configure(hostname='agent', port=8126) # STEP 02 
+# config.flask['service_name'] = 'taster' # STEP 02
 
-#STEP 02 - Automatic Instrumentation
-# from ddtrace import patch_all;
-# patch_all()
+# patch_all(flask=True) # STEP 02
+from flask import Flask, request, jsonify
 
+# patch_all(logging=True) # STEP 04
+import logging
+
+FORMAT = ('%(asctime)s %(levelname)s [%(name)s] [%(filename)s:%(lineno)d] '
+          #'[dd.trace_id=%(dd.trace_id)s dd.span_id=%(dd.span_id)s] ' # STEP 04
+          '- %(message)s')
+logging.basicConfig(format=FORMAT)
+log = logging.getLogger(__name__)
+log.level = logging.INFO
 
 import random
 
-from flask import Flask, request, jsonify
+#------------------------------#
 
 app = Flask(__name__)
 
@@ -23,5 +29,7 @@ def taste():
         score = random.randint(10, 0)
     else:
         score = random.randint(1, 10)
+
+    log.info('Tasting, giving it a '+str(score))
 
     return jsonify(score=score)
