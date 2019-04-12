@@ -100,6 +100,7 @@ In this first step, we'll use basic manual instrumentation to trace one single f
 First, we configure the agent to make it can receive traces. 
 ```yaml
 # docker-compose.yaml
+
   agent:
     image: "datadog/agent:latest"
     environment:
@@ -119,7 +120,7 @@ Then, let's instrument the code. The first thing to do is to import and configur
 ```python
 # cafe.py
 
-from ddtrace import tracer
+from ddtrace import tracer, config, patch_all;
 tracer.configure(hostname='agent', port=8126)
 ```
 
@@ -150,12 +151,14 @@ We'll use Datadog's monkey patcher, a tool for safely adding tracing to packages
 
 ```python
 # cafe.py
+
 from ddtrace import patch_all; 
 patch_all(flask=True)
 ```
 
 ```python
 # taster.py
+
 from ddtrace import tracer, config, patch_all
 tracer.configure(hostname='agent', port=8126) 
 config.flask['service_name'] = 'taster' 
@@ -165,13 +168,6 @@ from flask import Flask, request, jsonify
 ```
 
 Don't forget to remove the `tracer.wrap()` decorator from `beers()` function, which we added in Step 1 but which is useless now.
-
-```python
-# cafe.py
-@app.route('/beers')
-# @tracer.wrap(service='beers')
-def beers():
-```
 
 The middleware is operating by monkey patching the flask integration to ensure it is:
 - Timing requests
@@ -215,7 +211,6 @@ def best_match(beer):
 The reverse operation of getting the context back from the header in the HTTP call received by `taster` micro-service is done automatically, since the `Flask.request` package is patched along with any other `flask` component.
 
 
-
 ## Step 4 - Correlate Traces and Logs
 
 Traces are useful material, but sometimes troubleshoot starts with a line of log. Datadog magically enables correlation of traces and logs thanks to a `trace_id`. It's a unique identifier of every single trace, that you can easily report in any log written in that trace.
@@ -223,7 +218,7 @@ Traces are useful material, but sometimes troubleshoot starts with a line of log
 Let's append our logger format to inherit metadata from trace: `trace_id` and `span_id`.
 
 ```python
-# app.py
+# cafe.py
 
 patch_all(logging=True)
 import logging
@@ -231,9 +226,17 @@ import logging
 FORMAT = ('%(asctime)s %(levelname)s [%(name)s] [%(filename)s:%(lineno)d] '
           '[dd.trace_id=%(dd.trace_id)s dd.span_id=%(dd.span_id)s] '
           '- %(message)s')
-logging.basicConfig(format=FORMAT)
-log = logging.getLogger(__name__)
-log.level = logging.INFO
+```
+
+```python
+# taster.py
+
+patch_all(logging=True)
+import logging
+
+FORMAT = ('%(asctime)s %(levelname)s [%(name)s] [%(filename)s:%(lineno)d] '
+          '[dd.trace_id=%(dd.trace_id)s dd.span_id=%(dd.span_id)s] '
+          '- %(message)s')
 ```
 
 We need to configure the agent to collect logs from the docker socket - refer to [agent documentation](https://docs.datadoghq.com/logs/log_collection/docker/?tab=dockercompose)
@@ -245,6 +248,7 @@ We need to configure the agent to collect logs from the docker socket - refer to
     environment:
       - DD_LOGS_ENABLED=true
       - DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL=true
+      - DD_AC_EXCLUDE=name:agent
     volumes:
       - /opt/datadog-agent/run:/opt/datadog-agent/run:rw
   web:
@@ -283,10 +287,11 @@ Adding this environment variable in the datadog agent docker configures the agen
 
 ```
 # docker-compose.yml
+
   agent:
     image: "datadog/agent:latest"
     environment:
-      - DD_APM_ANALYZED_SPANS=flask|flask.do_teardown_appcontext=1
+      - DD_APM_ANALYZED_SPANS=cafe|flask.request=1,taster|flask.request=1 
 ```
 
 After this, you can now search for specific traces in the [Trace Search](https://app.datadoghq.com/apm/search), and access advanced [Analytics](https://app.datadoghq.com/apm/search/analytics) capabilities as well.
@@ -311,25 +316,12 @@ rather than making multiple requests.
 # app.py
 
 def best_match(beer):
-    # ...
-    try:
-        # propagate the trace context between the two services
-        span = tracer.current_span()
-        headers = {
-            "X-Datadog-Trace-Id": str(span.trace_id),
-            "X-Datadog-Parent-Id": str(span.span_id),
-        }
-
         resp = requests.get(
             "http://taster:5001/taste",
             params={"beer": beer.name, "donuts": candidates},
             timeout=2,
             headers=headers,
         )
-    except requests.exceptions.Timeout:
-        # log the error
-        return "not available"
-    # ...
 ```
 
 Then, we'll refactor the ``taste()`` function to accept this and return the donut
@@ -357,7 +349,6 @@ def taste():
 Once we've done this, we can take a look at another trace and notice that we've
 cut down the total time significantly, or about ~60 ms to ~20 ms: 
 
-![https://cl.ly/3J3Y0B330p1P](https://d1ax1i5f2y3x71.cloudfront.net/items/1k02400O1X331A123036/Image%202017-09-23%20at%202.47.53%20PM.png?X-CloudApp-Visitor-Id=2639901)
 
 ## In conclusion
 
