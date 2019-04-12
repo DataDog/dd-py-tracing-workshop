@@ -95,9 +95,7 @@ It feels slow! Slow enough that people might complain about it. Let's try to und
 
 ## Step 1 - Instrumenting one single function
 
-In this first step, we'll use basic manual instrumentation to trace one single function from our application. Let's edit the `cafe.py` to do that.
-
-Let's import and configure tracing capabilities:
+In this first step, we'll use basic manual instrumentation to trace one single function from our application. 
 
 First, we configure the agent to make it can receive traces. 
 ```yaml
@@ -116,6 +114,7 @@ First, we configure the agent to make it can receive traces.
       - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
 ```
 
+Then, let's instrument the code. The first thing to do is to import and configure tracing capabilities:
 
 ```python
 # cafe.py
@@ -141,7 +140,7 @@ If you access the [Beer Service Statistics](https://app.datadoghq.com/apm/servic
 
 This is useful, but you'll need more to observe what's happening in your application and eventually fix or optimize things.
 
-## Step 2 - Access full trace (Part 1 - Automatic Instrumentation)
+## Step 2 - Access full trace (Automatic Instrumentation)
 
 A good tracing client will unpack, for instance, some of the layers of indirection in ORMs, and give
 you a true view of the SQL being executed. This lets us marry the the nice APIs of ORMS with visibility
@@ -151,14 +150,18 @@ We'll use Datadog's monkey patcher, a tool for safely adding tracing to packages
 
 ```python
 # cafe.py
-from ddtrace import patch_all;
-patch_all()
+from ddtrace import patch_all; 
+patch_all(flask=True)
 ```
 
 ```python
 # taster.py
-from ddtrace import patch_all;
-patch_all()
+from ddtrace import tracer, config, patch_all
+tracer.configure(hostname='agent', port=8126) 
+config.flask['service_name'] = 'taster' 
+
+patch_all(flask=True)
+from flask import Flask, request, jsonify
 ```
 
 Don't forget to remove the `tracer.wrap()` decorator from `beers()` function, which we added in Step 1 but which is useless now.
@@ -179,7 +182,7 @@ Now, if we hit our app, we can see that Datadog has begun to display some inform
 you should be able to see some data in the APM portion of the Datadog application.
 
 
-## Step 3 - Access full trace (Part 2 - Distributed Tracing)
+## Step 3 - Access full trace (Distributed Tracing)
 
 At the moment I'm writing this workshop, the `requests` [package](http://docs.python-requests.org/en/master/) is not yet auto-instrumented by the monkey patcher (but it's about to come :) ). As a consequence, the traces from `cafe` web application and `taster` micro-service are not associated with each other.
 
