@@ -12,7 +12,7 @@ services:
       # - DD_APM_ANALYZED_SPANS=cafe|flask.request=1,taster|flask.request=1 # STEP 05
     # ports: # STEP 01 
       # - "8126:8126" # STEP 01
-    # volumes: STEP 01
+    # volumes: # STEP 01
       # - /var/run/docker.sock:/var/run/docker.sock:ro # STEP 01
       # - /proc/:/host/proc/:ro # STEP 01
       # - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro # STEP 01
