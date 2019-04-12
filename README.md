@@ -241,7 +241,7 @@ FORMAT = ('%(asctime)s %(levelname)s [%(name)s] [%(filename)s:%(lineno)d] '
 
 We need to configure the agent to collect logs from the docker socket - refer to [agent documentation](https://docs.datadoghq.com/logs/log_collection/docker/?tab=dockercompose)
   
-```
+```yaml
 # docker-compose.yml
 
   agent:
