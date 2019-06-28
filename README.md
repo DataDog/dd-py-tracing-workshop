@@ -42,7 +42,7 @@ After executing the command above, you should have running:
 * Redis, the backing datastore
 * Datadog agent, a process that listens for, samples and aggregates traces
 
-You can run the following command to verify these are running properly.
+You can run the following command to verify these are running properly. You might have to use `sudo` according to your permissions.
 
 ```bash
 $ docker-compose ps
@@ -97,7 +97,7 @@ It feels slow! Slow enough that people might complain about it. Let's try to und
 
 In this first step, we'll use basic manual instrumentation to trace one single function from our application. 
 
-First, we configure the agent to make it can receive traces. 
+First, we configure the agent to make it receive traces. 
 ```yaml
 # docker-compose.yaml
 
@@ -144,7 +144,7 @@ This is useful, but you'll need more to observe what's happening in your applica
 ## Step 2 - Access full trace (Automatic Instrumentation)
 
 A good tracing client will unpack, for instance, some of the layers of indirection in ORMs, and give
-you a true view of the SQL being executed. This lets us marry the the nice APIs of ORMS with visibility
+you a true view of the SQL being executed. This lets us marry the nice APIs of ORMS with visibility
 into what exactly is being executed and how performant it is.
 
 We'll use Datadog's monkey patcher, a tool for safely adding tracing to packages in the import space for both apps `cafe.py` and `taster.py`. This monkey patcher enables OOTB instrumentation for Flask applications, along with other common frameworks in Python.
@@ -239,7 +239,7 @@ FORMAT = ('%(asctime)s %(levelname)s [%(name)s] [%(filename)s:%(lineno)d] '
           '- %(message)s')
 ```
 
-We need to configure the agent to collect logs from the docker socket - refer to [agent documentation](https://docs.datadoghq.com/logs/log_collection/docker/?tab=dockercompose)
+We need to configure the agent to collect logs from the docker socket - refer to the [agent documentation](https://docs.datadoghq.com/logs/log_collection/docker/?tab=dockercompose).
   
 ```yaml
 # docker-compose.yml
@@ -262,7 +262,7 @@ We need to configure the agent to collect logs from the docker socket - refer to
 
 And finally update the [Log pipelines](https://app.datadoghq.com/logs/pipelines/) to process these custom-format python logs. Note that there is no need to do it for Agent and Redis Logs, they are automatically recongnized and processes as such.
 
-Create a new pipeline whose custom filter is `source:custotm_python`. Within that pipeline:
+Create a new pipeline which custom filter is `source:custotm_python`. Within that pipeline:
 
 * Create a Grok Parser witht the following parsing rule `custom_python_trace %{date("yyyy-MM-dd HH:mm:ss,SSS"):timestamp} %{word:levelname} \[%{word}\] \[%{word}.%{word}:%{integer}] \[dd.trace_id=%{numberStr:dd.trace_id} dd.span_id=%{numberStr:dd.span_id}\] - %{data:message}`,
 
@@ -297,7 +297,7 @@ Adding this environment variable in the datadog agent docker configures the agen
 After this, you can now search for specific traces in the [Trace Search](https://app.datadoghq.com/apm/search), and access advanced [Analytics](https://app.datadoghq.com/apm/search/analytics) capabilities as well.
 
 
-## Step 6  - Optimize Endpoint
+## Step 6  - Optimize Endpoint (optional)
 
 As we can see from that trace, we're spending a lot of time in the requests library,
 especially relative to the amount of work being done in the taster application. This
@@ -313,9 +313,10 @@ First, we'll refactor ``best_match`` to include all of the candidates in its req
 rather than making multiple requests.
 
 ```python
-# app.py
+# cafe.py
 
 def best_match(beer):
+        # ...
         resp = requests.get(
             "http://taster:5001/taste",
             params={"beer": beer.name, "donuts": candidates},
