@@ -4,30 +4,39 @@ services:
     image: "datadog/agent:latest"
     environment:
       - DD_API_KEY
-      - DD_APM_ENABLED=true
-      - DD_APM_NON_LOCAL_TRAFFIC=TRUE
-    ports:
-      - "8126:8126"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /proc/:/host/proc/:ro
-      - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
+      # - DD_APM_ENABLED=true # STEP 01
+      # - DD_APM_NON_LOCAL_TRAFFIC=TRUE # STEP 01
+      # - DD_LOGS_ENABLED=true # STEP 04
+      # - DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL=true # STEP 04
+      # - DD_AC_EXCLUDE=name:agent # STEP 04
+      # - DD_APM_ANALYZED_SPANS=cafe|flask.request=1,taster|flask.request=1 # STEP 05
+    # ports: # STEP 01 
+      # - "8126:8126" # STEP 01
+    # volumes: # STEP 01
+      # - /var/run/docker.sock:/var/run/docker.sock:ro # STEP 01
+      # - /proc/:/host/proc/:ro # STEP 01
+      # - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro # STEP 01
+      # - /opt/datadog-agent/run:/opt/datadog-agent/run:rw # STEP 04
   redis:
-    image: "redis:alpine"
-  web:
+    image: "redis:4.0.13-alpine"
+  cafe:
+    # labels: STEP 04      
+      # com.datadoghq.ad.logs: '[{"source": "python", "service": "cafe"}]' # STEP 04
     environment:
-      - FLASK_APP=app.py
+      - FLASK_APP=cafe.py
       - FLASK_DEBUG=1
     build: .
     command: flask run --port=5000 --host=0.0.0.0
     ports:
       - "5000:5000"
     volumes:
-      - "./step0${STEP}:/app"
+      - "./app:/app"
     depends_on:
       - agent
       - redis
   taster:
+    # labels: STEP 04
+      # com.datadoghq.ad.logs: '[{"source": "python", "service": "taster"}]' # STEP 04
     environment:
       - FLASK_APP=taster.py
       - FLASK_DEBUG=1
@@ -36,7 +45,7 @@ services:
     ports:
       - "5001:5001"
     volumes:
-      - "./step0${STEP}:/app"
+      - "./app:/app"
     depends_on:
       - agent
       - redis

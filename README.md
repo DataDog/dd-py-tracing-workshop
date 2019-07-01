@@ -6,9 +6,18 @@ Content for a workshop on Distributed Tracing sponsored by [Datadog](http://www.
 
 * Install ``docker`` and ``docker-compose`` on your system. Please, follow the instructions available
   in the [Docker website](https://www.docker.com/community-edition)
-* A [Datadog Account](https://app.datadoghq.com/signup)
-* A Datadog ``API_KEY`` that you can create from the [Datadog API page](https://app.datadoghq.com/account/settings#api).
-  Remember to not share this key with anyone.
+  For Linux environment, it should go like 
+  ```bash
+  $ sudo curl -sSL https://get.docker.com/ | sh
+  $ sudo curl -L "https://github.com/docker/compose/releases/download/1.24.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose``
+  $ sudo chmod +x /usr/local/bin/docker-compose
+  ```
+* Get the workshop material ready to play with
+  ```bash
+  $ git clone https://github.com/DataDog/dd-py-tracing-workshop.git
+  $ cd dd-py-tracing-workshop
+  ```
+* Create a [Datadog Account](https://app.datadoghq.com/signup) and get an ``API_KEY`` for that account (you can create from the [Datadog API page](https://app.datadoghq.com/account/settings#api)). Remember to not share this key with anyone.
 
 ## Flask Application
 
@@ -23,17 +32,17 @@ it probably has something in common with the apps you work on:
 The application runs in many Docker containers that you can launch using the following command:
 
 ```bash
-$ DD_API_KEY=<add_your_API_KEY_here> docker-compose up
+$ sudo DD_API_KEY=<add_your_API_KEY_here> docker-compose up -V
 ```
 
 Each Python application runs a Flask server with live-reload so you can update your code without restarting any container.
 After executing the command above, you should have running:
-* A Flask app ``web``, accepting HTTP requests
-* A smaller Flask app ``taster``, also accepting HTTP requests
+* A Flask app ``cafe``, accepting HTTP requests
+* A micro-service implemented by a smaller Flask app ``taster``, also accepting HTTP requests
 * Redis, the backing datastore
 * Datadog agent, a process that listens for, samples and aggregates traces
 
-You can run the following command to verify these are running properly.
+You can run the following command to verify these are running properly. You might have to use `sudo` according to your permissions.
 
 ```bash
 $ docker-compose ps
@@ -47,40 +56,10 @@ If all containers are running properly, you should see the following:
 ddpytracingworkshop_agent_1     /entrypoint.sh supervisord ...   Up      7777/tcp, 8125/udp, 0.0.0.0:8126->8126/tcp, 9001/tcp
 ddpytracingworkshop_redis_1     docker-entrypoint.sh redis ...   Up      6379/tcp
 ddpytracingworkshop_taster_1    python taster.py                 Up      0.0.0.0:5001->5001/tcp
-ddpytracingworkshop_web_1       python app.py                    Up      0.0.0.0:5000->5000/tcp
+ddpytracingworkshop_cafe_1      python cafe.py                   Up      0.0.0.0:5000->5000/tcp
 ```
 
-## Jump to the Next Step
-
-The Workshop is composed of many steps, with the intention that you will work entirely from the step01 directory. However,
-if at any point you get lost or fall behind, the`stepXX` folders contain the completed code from the previous step.
-
-Meaning, you can move to the current step's directory and run:
-
-```bash
-$ DD_API_KEY=<add_your_API_KEY_here> docker-compose up
-```
-
-Or, from the main directory, run:
-
-```bash
-$ DD_API_KEY=<add_your_API_KEY_here> STEP=<step_1_to_6> docker-compose up
-```
-
-to be caught up and able to continue along with everyone.
-
-## Debugging
-
-A few useful commands for debugging. You'll want these handy:
-
-```
-# tail the trace agent logs
-$ docker exec -it ddpytracingworkshop_agent_1 tail -f /var/log/datadog/trace-agent.log
-```
-
-## Step 0
-
-Let's poke through the app and see how it works.
+Now, let's poke through the app and see how it works.
 
 ### Architecture
 
@@ -113,21 +92,82 @@ Things feel pretty speedy. But what happens when we try to find a donut that pai
 
 It feels slow! Slow enough that people might complain about it. Let's try to understand why
 
-## Step 1 - Datadog's Python Tracing Client
 
-Datadog's tracing client integrates with several commonly used python libraries.
+## Step 1 - Instrumenting one single function
 
-Instrumentation can be explicit or implicit, and uses any library standards for telemetry that exist.
-For most web frameworks this means Middleware. Let's add trace middleware for our Flask integration:
+In this first step, we'll use basic manual instrumentation to trace one single function from our application. 
+
+First, we configure the agent to make it receive traces. 
+```yaml
+# docker-compose.yaml
+
+  agent:
+    image: "datadog/agent:latest"
+    environment:
+      - DD_API_KEY
+      - DD_APM_ENABLED=true
+      - DD_APM_NON_LOCAL_TRAFFIC=TRUE
+    ports: 
+      - "8126:8126"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc/:/host/proc/:ro
+      - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
+```
+
+Then, let's instrument the code. The first thing to do is to import and configure tracing capabilities:
 
 ```python
-# app.py
-from ddtrace import tracer
-from ddtrace.contrib.flask import TraceMiddleware
+# cafe.py
 
-app = create_app()
-TraceMiddleware(app, tracer, service="match-maker")
+from ddtrace import tracer, config, patch_all;
+tracer.configure(hostname='agent', port=8126)
 ```
+
+After what, we instrument the `beers()` function by adding the tracer decorator.
+```python
+# cafe.py
+
+@app.route('/beers')
+@tracer.wrap(service='beers')
+def beers():
+```
+
+Now, when you call your webapp for beers `curl -XGET "localhost:5000/beers"`, you see the traces of the underlying `beers()` function in Datadog Trace List [Datadog Trace List](https://app.datadoghq.com/apm/traces) 
+
+When you click (View Trace ->) on your newly tracked service, you see the "details" of the trace. For now, the details are limited to the single span of the `beers` method you just instrumented. One valuable information you find here is the duration of the span.
+
+If you access the [Beer Service Statistics](https://app.datadoghq.com/apm/service/beers/app.beers) page, you also find statistics about all the occurences of calls to that service (try `curl -XGET "localhost:5000/beers"` ten times in a row to populate that statistics. 
+
+This is useful, but you'll need more to observe what's happening in your application and eventually fix or optimize things.
+
+## Step 2 - Access full trace (Automatic Instrumentation)
+
+A good tracing client will unpack, for instance, some of the layers of indirection in ORMs, and give
+you a true view of the SQL being executed. This lets us marry the nice APIs of ORMS with visibility
+into what exactly is being executed and how performant it is.
+
+We'll use Datadog's monkey patcher, a tool for safely adding tracing to packages in the import space for both apps `cafe.py` and `taster.py`. This monkey patcher enables OOTB instrumentation for Flask applications, along with other common frameworks in Python.
+
+```python
+# cafe.py
+
+from ddtrace import patch_all; 
+patch_all(flask=True)
+```
+
+```python
+# taster.py
+
+from ddtrace import tracer, config, patch_all
+tracer.configure(hostname='agent', port=8126) 
+config.flask['service_name'] = 'taster' 
+
+patch_all(flask=True)
+from flask import Flask, request, jsonify
+```
+
+Don't forget to remove the `tracer.wrap()` decorator from `beers()` function, which we added in Step 1 but which is useless now.
 
 The middleware is operating by monkey patching the flask integration to ensure it is:
 - Timing requests
@@ -135,187 +175,129 @@ The middleware is operating by monkey patching the flask integration to ensure i
 - Pinning some information to the global request context to allow causal relationships to be registered
 
 Now, if we hit our app, we can see that Datadog has begun to display some information for us. Meaning,
-you should be able to see some data in the APM portion of the Datadog application. Ultimately,
-this code will produce a flame graph that looks like this:
+you should be able to see some data in the APM portion of the Datadog application.
 
-![https://cl.ly/1U0v3M0t0W2Z](https://d1ax1i5f2y3x71.cloudfront.net/items/0E3t1V1J31020y0G0L3u/Image%202017-09-23%20at%201.23.42%20PM.png?X-CloudApp-Visitor-Id=2639901 "Basic trace")
 
-### Services, Names, and Resources
+## Step 3 - Access full trace (Distributed Tracing)
 
-Datadog's tracing client configures your application to emit _Spans_.
-A span is a chunk of computation time. It is an operation that you care about, that takes some amount of time in the process of serving a request
-Let's look at what a span consists of:
+At the moment I'm writing this workshop, the `requests` [package](http://docs.python-requests.org/en/master/) is not yet auto-instrumented by the monkey patcher (but it's about to come :) ). As a consequence, the traces from `cafe` web application and `taster` micro-service are not associated with each other.
 
-```
-name flask.request
-id 7245111199352082055
-trace_id 1044159332829592407
-parent_id None
-service match-maker
-resource ping
-type http
-start 1495094155.75
-end 1495094155.92
-duration 0.17s
-error 0
-tags [
-    http.status_code: 200
-]
-```
+Good pretext to explore what's happening behind the scene with distributed tracing by doing it manually. Indeed, traces can cross boundaries thanks to trace context transiting through HTTP calls headers. 
 
-* `name` is the name of the operation being traced
-* `service` is the name of a set of processes that work together to provide a feature set.
-* `resource` is a particular query to a service. For web apps this is usually the route or handler function
-* `id` is the unique ID of the current span
-* `trace_id` is the unique ID of the request containing this span
-* `parent_id` is the unique ID of the span that was the immediate causal predecessor of this span.
-
-Remember the significance of `trace_id` and `parent_id`. We'll need them later as we wire up
-tracing across service boundaries.
-
-## Step 2 - Manual Instrumentation
-
-While expressive, a ``Span`` by itself is not incredibly useful. Let's add some context around it.
-
-Our app involves multiple services.
-You'll notice our service list is a little bare. That's because right now, Datadog only knows about the
-one high-level flask service. Let's do some work so that it knows about the other services and datastores we communicate with.
+Here is the corresponding code in the `cafe.py` to inject the trace context in the call to `taster` micro-service:
 
 ```python
-# app.py
+# cafe.py
 
-@app.route('/pair/beer')
-def pair():
-    """A complex endpoint that makes a request to another Python service"""
-    name = request.args.get('name')
-
-    with tracer.trace("beer.query", service="beer-database"):
-        beer = Beer.query.filter_by(name=name).first()
-
-    # force a query
-    with tracer.trace("donuts.query", service="beer-database"):
-        Donut.query.all()
-
-    with tracer.trace("donuts.query") as span:
-        span.set_tag('beer.name', name)
-        match = best_match(beer)
-    return jsonify(match=match)
-```
-
-If we hit the ``/pair/beer`` route a few more times, we should see a trace like this one:
-
-![https://cl.ly/1u0l1v3b1I46](https://d1ax1i5f2y3x71.cloudfront.net/items/2n2I3G3r320b082X0k1q/Image%202017-09-23%20at%201.50.43%20PM.png?X-CloudApp-Visitor-Id=2639901) 
-
-It's also worth noting that we now are able to see the tag
-we have set as well. If you select the appropriate span, you will see it in the metadata
-below:
-
-![https://cl.ly/163F000D0t2O](https://d1ax1i5f2y3x71.cloudfront.net/items/1Q1c0I1I3H2E0m0v2N0g/%5B4025b9ed7be33e3697c568703b3e2cf8%5D_Image%25202017-09-23%2520at%25201.52.08%2520PM.png?X-CloudApp-Visitor-Id=2639901)
-
-## Step 3 - Trace Application Libraries
-
-A good tracing client will unpack, for instance, some of the layers of indirection in ORMs, and give
-you a true view of the SQL being executed. This lets us marry the the nice APIs of ORMS with visibility
-into what exactly is being executed and how performant it is.
-
-Let's see what Datadog's ``sqlalchemy``, ``redis`` and ``requests`` integrations can do to help
-de-mystify some of the abstractions we've built in our app. We'll use Datadog's monkey patcher, a tool
-for safely adding tracing to packages in the import space:
-
-```python
-# bootstrap.py
-
-from ddtrace import tracer, patch
-patch(sqlalchemy=True, redis=True, requests=True)
-```
-
-Ping our favorite route a few more times, and Datadog should show you a trace like this:
-
-![https://cl.ly/0l2Y2x1w0i37](https://d1ax1i5f2y3x71.cloudfront.net/items/24022k1k1N3G0Q0r3z3p/Image%202017-09-23%20at%202.07.44%20PM.png?X-CloudApp-Visitor-Id=2639901)
-
-## Step 4 - Distributed!
-
-Most of the hard problems we have to solve in our systems won't involve just one application. Even in our
-toy app the ``best_match`` function crosses a distinct service boundary, making an HTTP call to the "taster" service.
-
-For traditional metrics and logging crossing a service boundary is often a full stop for whatever telemetry you have
-in place. But traces can cross these boundaries, which is what makes them so useful.
-
-Here's how to make this happen in the Datadog client. First we configure the service that behaves as the client,
-to propagate information about the active trace via HTTP headers:
-
-```python
-# app.py
+from ddtrace.propagation.http import HTTPPropagator
 
 def best_match(beer):
-    # ...
-    for candidate in candidates:
-        try:
-            # propagate the trace context between the two services
-            span = tracer.current_span()
-            headers = {
-                "X-Datadog-Trace-Id": str(span.trace_id),
-                "X-Datadog-Parent-Id": str(span.span_id),
-            }
+  
+    with tracer.trace("best_match") as span:
+        
+        # [...]
 
-            resp = requests.get(
-                "http://taster:5001/taste",
-                params={"beer": beer.name, "donut": candidate},
-                timeout=2,
-                headers=headers,
-            )
-        except requests.exceptions.Timeout:
-            continue
-    # ...
+        for candidate in candidates:
+            headers = {}
+            propagator = HTTPPropagator()
+            propagator.inject(span.context,headers)
+            try:
+                 resp = requests.get("http://taster:5001/taste",
+                                     params={"beer": beer.name, "donut": candidate},
+                                     timeout=2,headers=headers)
+        # [...]
 ```
 
-We set up tracing on the server-side app (``taster``):
+The reverse operation of getting the context back from the header in the HTTP call received by `taster` micro-service is done automatically, since the `Flask.request` package is patched along with any other `flask` component.
+
+
+## Step 4 - Correlate Traces and Logs
+
+Traces are useful material, but sometimes troubleshoot starts with a line of log. Datadog magically enables correlation of traces and logs thanks to a `trace_id`. It's a unique identifier of every single trace, that you can easily report in any log written in that trace.
+
+Let's append our logger format to inherit metadata from trace: `trace_id` and `span_id`.
+
+```python
+# cafe.py
+
+patch_all(logging=True)
+import logging
+
+FORMAT = ('%(asctime)s %(levelname)s [%(name)s] [%(filename)s:%(lineno)d] '
+          '[dd.trace_id=%(dd.trace_id)s dd.span_id=%(dd.span_id)s] '
+          '- %(message)s')
+```
 
 ```python
 # taster.py
 
-import random
+patch_all(logging=True)
+import logging
 
-# import tracing functions
-from ddtrace import tracer
-from ddtrace.contrib.flask import TraceMiddleware
-
-from flask import Flask, request, jsonify
-
-
-app = create_app()
-
-# trace the Flask application
-tracer.configure(hostname='agent')
-TraceMiddleware(app, tracer, service="taster")
+FORMAT = ('%(asctime)s %(levelname)s [%(name)s] [%(filename)s:%(lineno)d] '
+          '[dd.trace_id=%(dd.trace_id)s dd.span_id=%(dd.span_id)s] '
+          '- %(message)s')
 ```
 
-Then we configure the server side of this equation to extract this information from the HTTP headers and continue the trace:
-```python
-# taster.py
+We need to configure the agent to collect logs from the docker socket - refer to the [agent documentation](https://docs.datadoghq.com/logs/log_collection/docker/?tab=dockercompose).
+  
+```yaml
+# docker-compose.yml
 
-@app.route("/taste")
-def taste():
-    # continue the trace
-    trace_id = request.headers.get("X-Datadog-Trace-Id")
-    parent_id = request.headers.get("X-Datadog-Parent-Id")
-    if trace_id and parent_id:
-        span = tracer.current_span()
-        span.trace_id = int(trace_id)
-        span.parent_id = int(parent_id)
+  agent:
+    environment:
+      - DD_LOGS_ENABLED=true
+      - DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL=true
+      - DD_AC_EXCLUDE=name:agent
+    volumes:
+      - /opt/datadog-agent/run:/opt/datadog-agent/run:rw
+  web:
+    labels:
+      com.datadoghq.ad.logs: '[{"source": "custom_python", "service": "web"}]'
+  taster:
+    labels:
+      com.datadoghq.ad.logs: '[{"source": "custom_python", "service": "taster"}]'
 
-    request.args.get("beer")
-    # ...
 ```
 
-Let's hit our pairing route a few more times now, and see what Datadog turns up:
-``curl -XGET "localhost:5000/pair/beer?name=ipa"``
+And finally update the [Log pipelines](https://app.datadoghq.com/logs/pipelines/) to process these custom-format python logs. Note that there is no need to do it for Agent and Redis Logs, they are automatically recongnized and processes as such.
 
-If everything went well we should see a distributed trace: 
+Create a new pipeline which custom filter is `source:custotm_python`. Within that pipeline:
 
-![alt text](https://d1ax1i5f2y3x71.cloudfront.net/items/2C130u1S143T1f3p2H33/Image%202017-09-23%20at%202.20.42%20PM.png?X-CloudApp-Visitor-Id=2639901 "Distributed Trace")
+* Create a Grok Parser witht the following parsing rule `custom_python_trace %{date("yyyy-MM-dd HH:mm:ss,SSS"):timestamp} %{word:levelname} \[%{word}\] \[%{word}.%{word}:%{integer}] \[dd.trace_id=%{numberStr:dd.trace_id} dd.span_id=%{numberStr:dd.span_id}\] - %{data:message}`,
 
-## Step 5 - Optimize Endpoint
+* Create a Date Remapper with the `timestamp` attribute,
+
+* Create a Status remapper with the `levelname` attribute,
+
+* Ceatet a Trace ID with the `dd.trace_id` attribute.
+
+
+With that setup, you should now be able: 
+
+* to access logs from a trace - see the Log Panel in the Trace Panel. [See Documentation](https://docs.datadoghq.com/tracing/visualization/trace/?tab=logs)
+
+* to access a trace from a log - see the "Go to Trace" buttom in the Log Panel. [See Documentation](https://docs.datadoghq.com/logs/explorer/?tab=logstream#log-panel)  
+
+## Step 5 - Trace Search
+
+Trace search deactivated by default in Datadog. You should explictely enable it, service by service. 
+
+Adding this environment variable in the datadog agent docker configures the agent to send trace events for the flask service.
+
+```
+# docker-compose.yml
+
+  agent:
+    image: "datadog/agent:latest"
+    environment:
+      - DD_APM_ANALYZED_SPANS=cafe|flask.request=1,taster|flask.request=1 
+```
+
+After this, you can now search for specific traces in the [Trace Search](https://app.datadoghq.com/apm/search), and access advanced [Analytics](https://app.datadoghq.com/apm/search/analytics) capabilities as well.
+
+
+## Step 6  - Optimize Endpoint (optional)
 
 As we can see from that trace, we're spending a lot of time in the requests library,
 especially relative to the amount of work being done in the taster application. This
@@ -331,28 +313,16 @@ First, we'll refactor ``best_match`` to include all of the candidates in its req
 rather than making multiple requests.
 
 ```python
-# app.py
+# cafe.py
 
 def best_match(beer):
-    # ...
-    try:
-        # propagate the trace context between the two services
-        span = tracer.current_span()
-        headers = {
-            "X-Datadog-Trace-Id": str(span.trace_id),
-            "X-Datadog-Parent-Id": str(span.span_id),
-        }
-
+        # ...
         resp = requests.get(
             "http://taster:5001/taste",
             params={"beer": beer.name, "donuts": candidates},
             timeout=2,
             headers=headers,
         )
-    except requests.exceptions.Timeout:
-        # log the error
-        return "not available"
-    # ...
 ```
 
 Then, we'll refactor the ``taste()`` function to accept this and return the donut
@@ -380,7 +350,6 @@ def taste():
 Once we've done this, we can take a look at another trace and notice that we've
 cut down the total time significantly, or about ~60 ms to ~20 ms: 
 
-![https://cl.ly/3J3Y0B330p1P](https://d1ax1i5f2y3x71.cloudfront.net/items/1k02400O1X331A123036/Image%202017-09-23%20at%202.47.53%20PM.png?X-CloudApp-Visitor-Id=2639901)
 
 ## In conclusion
 
