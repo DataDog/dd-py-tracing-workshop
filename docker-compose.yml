@@ -20,7 +20,7 @@ services:
   redis:
     image: "redis:4.0.13-alpine"
   cafe:
-    # labels: STEP 04      
+    # labels: # STEP 04      
       # com.datadoghq.ad.logs: '[{"source": "python", "service": "cafe"}]' # STEP 04
     environment:
       - FLASK_APP=cafe.py
@@ -35,7 +35,7 @@ services:
       - agent
       - redis
   taster:
-    # labels: STEP 04
+    # labels: # STEP 04
       # com.datadoghq.ad.logs: '[{"source": "python", "service": "taster"}]' # STEP 04
     environment:
       - FLASK_APP=taster.py
