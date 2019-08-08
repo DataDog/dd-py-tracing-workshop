@@ -251,9 +251,9 @@ We need to configure the agent to collect logs from the docker socket - refer to
       - DD_AC_EXCLUDE=name:agent
     volumes:
       - /opt/datadog-agent/run:/opt/datadog-agent/run:rw
-  web:
+  cafe:
     labels:
-      com.datadoghq.ad.logs: '[{"source": "custom_python", "service": "web"}]'
+      com.datadoghq.ad.logs: '[{"source": "custom_python", "service": "cafe"}]'
   taster:
     labels:
       com.datadoghq.ad.logs: '[{"source": "custom_python", "service": "taster"}]'
@@ -262,7 +262,7 @@ We need to configure the agent to collect logs from the docker socket - refer to
 
 And finally update the [Log pipelines](https://app.datadoghq.com/logs/pipelines/) to process these custom-format python logs. Note that there is no need to do it for Agent and Redis Logs, they are automatically recongnized and processes as such.
 
-Create a new pipeline which custom filter is `source:custotm_python`. Within that pipeline:
+Create a new pipeline which custom filter is `source:custom_python`. Within that pipeline:
 
 * Create a Grok Parser witht the following parsing rule `custom_python_trace %{date("yyyy-MM-dd HH:mm:ss,SSS"):timestamp} %{word:levelname} \[%{word}\] \[%{word}.%{word}:%{integer}] \[dd.trace_id=%{numberStr:dd.trace_id} dd.span_id=%{numberStr:dd.span_id}\] - %{data:message}`,
 
