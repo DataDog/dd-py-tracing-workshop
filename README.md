@@ -45,7 +45,7 @@ After executing the command above, you should have running:
 You can run the following command to verify these are running properly. You might have to use `sudo` according to your permissions.
 
 ```bash
-$ docker-compose ps
+$ docker ps
 ```
 
 If all containers are running properly, you should see the following:
