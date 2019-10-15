@@ -20,5 +20,4 @@ redis==2.10.6
 requests==2.20.0
 sqlalchemy==1.2.7         # via flask-sqlalchemy
 urllib3==1.23             # via requests
-werkzeug==0.14.1          # via flask
-wrapt==1.10.11            # via ddtrace
+werkzeug==0.15.3          # via flask
