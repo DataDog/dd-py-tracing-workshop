@@ -99,7 +99,7 @@ def best_match(beer):
         best_match = None
 
         for candidate in candidates:
-            # cheaders = {} # STEP 03
+            # headers = {} # STEP 03
             # propagator = HTTPPropagator() # STEP 03
             # propagator.inject(span.context,headers) # STEP 03
             try:
