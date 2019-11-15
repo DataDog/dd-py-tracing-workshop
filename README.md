@@ -128,9 +128,9 @@ After what, we instrument the `beers()` function by adding the tracer decorator.
 ```python
 # cafe.py
 
-@app.route('/beers')
+@app.route('/ping')
 @tracer.wrap(service='beers')
-def beers():
+def ping():
 ```
 
 Now, when you call your webapp for beers `curl -XGET "localhost:5000/beers"`, you see the traces of the underlying `beers()` function in Datadog Trace List [Datadog Trace List](https://app.datadoghq.com/apm/traces) 
